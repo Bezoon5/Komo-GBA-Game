@@ -484,6 +484,7 @@ void host_frame(void) {
 }
 
 int main(int argc, char **argv) {
+    if (getenv("RANDVRAM")) { srand(atoi(getenv("RANDVRAM"))); for (int i = 0; i < (int)sizeof host_vram; i++) host_vram[i] = rand(); }   /* power-on garbage */
     if (argc > 1) frame_limit = atol(argv[1]);
     if (argc > 2) dump_every = atoi(argv[2]);
     if (argc > 3) bot_mode = atoi(argv[3]);

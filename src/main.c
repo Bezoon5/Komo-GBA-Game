@@ -35,8 +35,11 @@ static void plat_copy32(volatile void *dst, const void *src, u32 words) {
     REG_DMA_DAD(3) = (u32)dst;
     REG_DMA_CNT(3) = words | 0x84000000u;      /* enable, 32-bit, immediate */
 }
-static const u32 zero_word = 0;
+/* the zero for DMA fills must be in RAM: a DMA reading the cartridge can't hold its source address
+   fixed (the hardware, and accurate emulators such as mGBA, step through the ROM instead) */
+static volatile u32 zero_word;
 static void plat_fill32(volatile void *dst, u32 words) {
+    zero_word = 0;
     REG_DMA_SAD(3) = (u32)&zero_word;
     REG_DMA_DAD(3) = (u32)dst;
     REG_DMA_CNT(3) = words | 0x85000000u;      /* enable, 32-bit, fixed source, immediate */

@@ -1,5 +1,8 @@
 # Changelog
 
+## v5.5.1
+- Fixed speckled garbage around the fighters in accurate emulators (mGBA, including the web player) and on hardware: sprite tiles are now cleared from a zero kept in RAM, because a DMA reading the cartridge can't hold its source address fixed.
+
 ## v5.5
 - Weighted motion for guards, sidesteps, the backstep, hit reactions, staggers and deaths.
 - The hakama trails the direction of travel and swings after each leg.
