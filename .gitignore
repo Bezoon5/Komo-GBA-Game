@@ -1,0 +1,13 @@
+# build output (./build.sh regenerates these)
+out/
+src/gen/
+
+# Python
+__pycache__/
+*.pyc
+
+# editors and systems
+.DS_Store
+*.swp
+.vscode/
+.idea/

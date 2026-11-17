@@ -1,0 +1,1212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kōmō character designer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #15100f; --panel: #1f1816; --panel2: #2a211e; --line: #3b2f2a;
+    --paper: #efe6d6; --muted: #b3a593; --red: #c8341f; --red2: #e2532f; --gold: #f2c25c;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--ink); color: var(--paper); font: 14px/1.45 Inter, system-ui, sans-serif; }
+  header { display: flex; align-items: center; gap: 14px; padding: 16px 24px; border-bottom: 1px solid var(--line); }
+  .seal { width: 34px; height: 48px; background: var(--red); color: var(--paper); border-radius: 3px;
+    font: 800 17px/20px "Shippori Mincho", serif; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  h1 { margin: 0; font: 800 26px "Shippori Mincho", serif; letter-spacing: .04em; }
+  h1 small { display: block; font: 500 13px Inter, sans-serif; color: var(--muted); letter-spacing: 0; }
+  main { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 20px; padding: 20px 24px 40px; max-width: 1280px; margin: 0 auto; }
+  @media (max-width: 960px) { main { grid-template-columns: 1fr; } }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; }
+  .stage { position: relative; background: #000; border-radius: 6px; overflow: hidden; }
+  canvas#view { display: block; width: 100%; image-rendering: pixelated; image-rendering: crisp-edges; }
+  .warn { margin-top: 10px; padding: 8px 10px; border-radius: 6px; background: #4a1d14; color: #ffd2c4; font-size: 13px; display: none; }
+  .row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .chip { background: var(--panel2); border: 1px solid var(--line); color: var(--paper); border-radius: 999px; padding: 5px 11px; cursor: pointer; font: 500 13px Inter, sans-serif; }
+  .chip:hover { border-color: #6b5549; }
+  .chip.on { background: var(--red); border-color: var(--red2); }
+  .chip.small { padding: 3px 9px; font-size: 12px; }
+  .lbl { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .08em; margin: 14px 0 6px; }
+  .controls { display: grid; gap: 10px; margin-top: 12px; }
+  .tabs { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-bottom: 6px; }
+  .tab { padding: 9px; text-align: center; border-radius: 8px; border: 1px solid var(--line); background: var(--panel2); cursor: pointer; font: 700 16px "Shippori Mincho", serif; color: var(--paper); }
+  .tab.on { border-color: var(--gold); box-shadow: inset 0 -3px 0 var(--gold); }
+  details { border-top: 1px solid var(--line); padding: 4px 0; }
+  details[open] { padding-bottom: 10px; }
+  summary { cursor: pointer; list-style: none; padding: 10px 0 6px; font: 700 15px "Shippori Mincho", serif; display: flex; justify-content: space-between; }
+  summary::after { content: "+"; color: var(--muted); font-family: Inter; }
+  details[open] summary::after { content: "–"; }
+  .slider { display: grid; grid-template-columns: 112px 1fr 44px; gap: 8px; align-items: center; margin: 6px 0; }
+  .slider span:first-child { color: var(--muted); }
+  .slider output { font: 500 12px "JetBrains Mono", monospace; text-align: right; color: var(--gold); }
+  input[type=range] { width: 100%; accent-color: var(--red2); }
+  select { width: 100%; background: var(--panel2); color: var(--paper); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; font: 14px Inter, sans-serif; }
+  .colrow { display: grid; grid-template-columns: 112px 1fr auto; gap: 8px; align-items: center; margin: 7px 0; }
+  .colrow span { color: var(--muted); }
+  .sw { display: flex; gap: 5px; }
+  .sw label { position: relative; width: 34px; height: 26px; border-radius: 5px; border: 1px solid #00000080; overflow: hidden; cursor: pointer; box-shadow: inset 0 0 0 1px #ffffff22; }
+  .sw input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+  .sw small { position: absolute; bottom: -1px; left: 2px; font-size: 9px; color: #fff; text-shadow: 0 0 2px #000; pointer-events: none; }
+  button.act { background: var(--panel2); border: 1px solid var(--line); color: var(--paper); border-radius: 6px; padding: 6px 10px; cursor: pointer; font: 500 12px Inter, sans-serif; }
+  button.act:hover { border-color: #6b5549; }
+  button.primary { background: var(--red); border-color: var(--red2); font-weight: 600; padding: 9px 14px; font-size: 14px; }
+  .toggle { display: flex; align-items: center; gap: 8px; color: var(--paper); cursor: pointer; margin: 6px 0; }
+  .toggle input { accent-color: var(--red2); width: 16px; height: 16px; }
+  textarea { width: 100%; height: 120px; background: #0f0b0a; color: #d9cbb6; border: 1px solid var(--line); border-radius: 6px; padding: 8px; font: 11px/1.4 "JetBrains Mono", monospace; resize: vertical; }
+  .note { color: var(--muted); font-size: 12px; margin: 6px 0 0; }
+  .export { grid-column: 1 / -1; }
+  .exp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 760px) { .exp-grid { grid-template-columns: 1fr; } }
+  .status { font-size: 12px; color: var(--gold); min-height: 1em; margin-left: 8px; }
+  .scrub { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; }
+  .mono { font: 500 12px "JetBrains Mono", monospace; color: var(--muted); }
+</style>
+</head>
+<body>
+<header>
+  <div class="seal"><span>紅</span><span>毛</span></div>
+  <h1>Kōmō <small>Character designer: change the fighters, then copy the settings back into the chat</small></h1>
+</header>
+<main>
+  <section>
+    <div class="card">
+      <div class="stage"><canvas id="view" width="240" height="160"></canvas></div>
+      <div id="warn" class="warn"></div>
+      <div class="controls">
+        <div>
+          <div class="lbl">Animation</div>
+          <div class="row" id="animChips"></div>
+        </div>
+        <div class="row" id="stanceRow">
+          <span class="mono" style="margin-right:4px">Stance</span>
+        </div>
+        <div class="scrub">
+          <button class="act" id="play">Pause</button>
+          <input type="range" id="frame" min="0" max="0" value="0">
+          <span class="mono" id="frameLbl">1/1</span>
+        </div>
+        <div class="row">
+          <span class="mono" style="margin-right:4px">View</span>
+          <button class="chip small on" data-view="duel">Duel</button>
+          <button class="chip small" data-view="close">Close-up</button>
+          <label class="toggle" style="margin-left:12px"><input type="checkbox" id="bothAnim"> Both fighters play it</label>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <aside class="card">
+    <div class="tabs">
+      <button class="tab on" data-char="lieve">Lieve</button>
+      <button class="tab" data-char="kenji">Kenji</button>
+      <button class="tab" data-char="hozen">Hōzen</button>
+      <button class="tab" data-char="gonzo">Gonzō</button>
+      <button class="tab" data-char="kagero">Kagerō</button>
+      <button class="tab" data-char="kurogane">Kurogane</button>
+      <button class="tab" data-char="sailor">Sailor</button>
+      <button class="tab" data-char="morsel">Morsel</button>
+    </div>
+    <div id="presetBox">
+      <div class="lbl">Lieve designs</div>
+      <div class="row" id="presets"></div>
+    </div>
+
+    <details open>
+      <summary>Hair and headband</summary>
+      <div class="slider"><span>Hair style</span>
+        <select id="hair" style="grid-column: 2 / 4">
+          <option value="ponytail">Ponytail</option>
+          <option value="highpony">High ponytail with ribbon</option>
+          <option value="lowpony">Low ponytail with ribbon</option>
+          <option value="flowing">Long, flowing</option>
+          <option value="braid">Long braid</option>
+          <option value="halfup">Half-up with bun</option>
+          <option value="long">Long, loose (classic)</option>
+          <option value="bun">Bun</option>
+          <option value="topknot">Topknot (chonmage)</option>
+          <option value="short">Short</option>
+          <option value="bald">Shaved</option>
+        </select>
+      </div>
+      <div class="slider" id="tailRow"><span>Hair length</span><input type="range" id="tail_len" min="3" max="9" step="0.1"><output></output></div>
+      <label class="toggle"><input type="checkbox" id="headband"> Headband (uses the "Headband / blade edge" colour)</label>
+      <label class="toggle"><input type="checkbox" id="bangs"> Fringe</label>
+      <label class="toggle"><input type="checkbox" id="sidelocks"> Side locks framing the face</label>
+    </details>
+
+    <details open>
+      <summary>Face and outfit</summary>
+      <label class="toggle"><input type="checkbox" id="eyes"> Eye with lashes</label>
+      <label class="toggle"><input type="checkbox" id="lips"> Red lips (uses the hair colour)</label>
+      <label class="toggle"><input type="checkbox" id="vneck"> V collar showing the throat</label>
+      <label class="toggle"><input type="checkbox" data-flag="ears"> Ears (shown when the head is uncovered)</label>
+      <div class="slider"><span>Sash</span>
+        <select id="obi" style="grid-column: 2 / 4">
+          <option value="0">Same as hakama</option>
+          <option value="1">Red (hair colour)</option>
+          <option value="2">White (kimono colour)</option>
+          <option value="3">None</option>
+        </select>
+      </div>
+      <div class="slider"><span>Weapon</span>
+        <select id="weapon" style="grid-column: 2 / 4">
+          <option value="katana">Katana (steel)</option>
+          <option value="bokken">Bokken (wooden)</option>
+          <option value="bo">Bō staff</option>
+          <option value="dual">Two swords</option>
+          <option value="knives">Two knives</option>
+          <option value="nodachi">Nōdachi (great sword)</option>
+          <option value="kusarigama">Sickle and chain</option>
+          <option value="rapier">Rapier</option>
+          <option value="cutlass">Cutlass</option>
+        </select>
+      </div>
+    </details>
+    <details>
+      <summary>Armour and costume</summary>
+      <label class="toggle"><input type="checkbox" data-flag="helm"> Kabuto helmet with horns and neck guard</label>
+      <label class="toggle"><input type="checkbox" data-flag="menpo"> Red face mask with moustache</label>
+      <label class="toggle"><input type="checkbox" data-flag="hood"> Ninja hood, open at the eyes</label>
+      <label class="toggle"><input type="checkbox" data-flag="sode"> Shoulder plates</label>
+      <label class="toggle"><input type="checkbox" data-flag="lames"> Lacquered chest plates</label>
+      <label class="toggle"><input type="checkbox" data-flag="kusazuri"> Armour skirt</label>
+      <label class="toggle"><input type="checkbox" data-flag="gauntlets"> Armoured forearms</label>
+      <label class="toggle"><input type="checkbox" data-flag="kesa"> Monk's stole and prayer beads</label>
+      <label class="toggle"><input type="checkbox" data-flag="bare_arms"> Bare arms</label>
+      <label class="toggle"><input type="checkbox" data-flag="torn"> Torn sleeves and cut jacket</label>
+      <label class="toggle"><input type="checkbox" data-flag="stripes"> Striped shirt</label>
+      <label class="toggle"><input type="checkbox" data-flag="knitcap"> Wool cap</label>
+      <label class="toggle"><input type="checkbox" data-flag="hat"> Dutch hat</label>
+      <label class="toggle"><input type="checkbox" data-flag="ruff"> White ruff collar</label>
+      <label class="toggle"><input type="checkbox" data-flag="beard"> Moustache and beard</label>
+      <label class="toggle"><input type="checkbox" data-flag="pistol"> Flintlock pistol (with the rapier)</label>
+    </details>
+
+    <details open>
+      <summary>Body</summary>
+      <div id="sliders"></div>
+    </details>
+
+    <details open>
+      <summary>Colours</summary>
+      <div id="colours"></div>
+      <p class="note">Swatches show the colour as the GBA will display it (32 levels per channel). "Auto" makes the shadow and highlight from the middle colour.</p>
+    </details>
+
+    <div class="row" style="margin-top:10px">
+      <button class="act" id="resetChar">Reset this fighter to the ROM</button>
+      <button class="act" id="mirror">Copy look to the other fighter</button>
+    </div>
+  </aside>
+
+  <section class="card export">
+    <div class="exp-grid">
+      <div>
+        <div class="lbl" style="margin-top:0">Send your design</div>
+        <div class="row"><button class="act primary" id="copy">Copy settings</button><span class="status" id="copyStatus"></span></div>
+        <p class="note">Paste the copied settings into the chat and the ROM gets rebuilt with your fighters. The text below is the same settings, if copying is blocked.</p>
+        <textarea id="out" readonly></textarea>
+      </div>
+      <div>
+        <div class="lbl" style="margin-top:0">Load settings</div>
+        <textarea id="in" placeholder="Paste settings here to keep editing a saved design"></textarea>
+        <div class="row" style="margin-top:6px"><button class="act" id="load">Load</button><button class="act" id="resetAll">Reset everyone to what's in the ROM</button><span class="status" id="loadStatus"></span></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
+// Kōmō fighter renderer: a line-for-line port of tools/fighters.py so the
+// designer preview matches the game's sprites. Works in the browser and Node.
+(function (root) {
+  const CW = 192, CH = 160, RX = 70, GY = 156;
+  const OUT = 1, SKIN = 2, HAIR = 5, TOP = 8, BOT = 11, STEEL_L = 14, STEEL_M = 15;
+  const Ln = Math.hypot(-0.45, 0.55, 0.70);
+  const L3 = [-0.45 / Ln, 0.55 / Ln, 0.70 / Ln];
+  const rad = a => a * Math.PI / 180;
+  const v = (x, y) => [x, y];
+  const add = (a, b) => [a[0] + b[0], a[1] + b[1]];
+  const sub = (a, b) => [a[0] - b[0], a[1] - b[1]];
+  const mul = (a, s) => [a[0] * s, a[1] * s];
+
+  // anchor (fraction of head radius: forward, up), radius root->tip, spring rest, segments
+  const CHAIN_STYLES = {
+    ponytail: [[-0.85, 0.35], [3.1, 1.3], 238.0, 5],
+    long: [[-0.55, 0.2], [5.0, 2.8], 258.0, 5],
+    flowing: [[-0.7, 0.2], [5.8, 2.2], 214.0, 6],
+    highpony: [[-0.55, 0.85], [3.4, 1.2], 208.0, 6],
+    braid: [[-0.8, 0.0], [2.5, 1.6], 218.0, 7],
+    halfup: [[-0.7, 0.2], [4.6, 2.0], 216.0, 6],
+    lowpony: [[-0.85, -0.3], [3.8, 1.6], 228.0, 6],
+  };
+  const CLAMPED = ['flowing', 'highpony', 'braid', 'halfup', 'lowpony'];
+
+  function ik(a, b, l1, l2, bend) {
+    const d = sub(b, a);
+    let dist = Math.hypot(d[0], d[1]);
+    dist = Math.max(Math.min(dist, l1 + l2 - 1e-3), Math.abs(l1 - l2) + 1e-3);
+    const base = Math.atan2(d[1], d[0]);
+    const ca = (l1 * l1 + dist * dist - l2 * l2) / (2 * l1 * dist);
+    const A = Math.acos(Math.max(-1, Math.min(1, ca)));
+    const ang = base + bend * A;
+    const j = add(a, [l1 * Math.cos(ang), l1 * Math.sin(ang)]);
+    const dj = sub(b, j);
+    const n = Math.hypot(dj[0], dj[1]) || 1;
+    return [j, add(j, mul(dj, l2 / n))];
+  }
+
+  class Canvas {
+    constructor() { this.idx = new Uint8Array(CW * CH); this.z = new Float64Array(CW * CH).fill(-1e9); this.I = new Float64Array(CW * CH).fill(NaN); }
+    grid(x0, y0, x1, y1) {
+      x0 = Math.max(0, Math.floor(x0) - 1); y0 = Math.max(0, Math.floor(y0) - 1);
+      x1 = Math.min(CW, Math.ceil(x1) + 2); y1 = Math.min(CH, Math.ceil(y1) + 2);
+      if (x1 <= x0 || y1 <= y0) return null;
+      return [x0, y0, x1, y1];
+    }
+    cap(p0, p1, r0, r1, mat, z, bias = 0, flat = null, mask = null) {
+      const g = this.grid(Math.min(p0[0] - r0, p1[0] - r1), Math.min(p0[1] - r0, p1[1] - r1),
+        Math.max(p0[0] + r0, p1[0] + r1), Math.max(p0[1] + r0, p1[1] + r1));
+      if (!g) return;
+      const dx = p1[0] - p0[0], dy = p1[1] - p0[1], l2 = dx * dx + dy * dy;
+      for (let py = g[1]; py < g[3]; py++) for (let px = g[0]; px < g[2]; px++) {
+        const xs = px + 0.5, ys = py + 0.5;
+        let t = l2 > 1e-9 ? ((xs - p0[0]) * dx + (ys - p0[1]) * dy) / l2 : 0;
+        t = t < 0 ? 0 : t > 1 ? 1 : t;
+        const cx = p0[0] + t * dx, cy = p0[1] + t * dy, r = r0 + (r1 - r0) * t;
+        const ox = xs - cx, oy = ys - cy;
+        if (Math.sqrt(ox * ox + oy * oy) > r) continue;
+        if (mask && !mask(xs, ys)) continue;
+        let val, I = NaN;
+        if (flat === null) {
+          const nx = ox / r, ny = -oy / r;
+          const nz = Math.sqrt(Math.min(1, Math.max(0, 1 - nx * nx - ny * ny)));
+          I = nx * L3[0] + ny * L3[1] + nz * L3[2] + bias;
+          val = mat + (I < 0.28 ? 0 : I < 0.74 ? 1 : 2);
+        } else val = flat;
+        const i = py * CW + px;
+        this.idx[i] = val; this.z[i] = z; this.I[i] = I;
+      }
+    }
+    blade(a, b, w, z, en, lite = STEEL_L, mid = STEEL_M, taper = 0.75) {
+      const g = this.grid(Math.min(a[0], b[0]) - w, Math.min(a[1], b[1]) - w, Math.max(a[0], b[0]) + w, Math.max(a[1], b[1]) + w);
+      if (!g) return;
+      const dx = b[0] - a[0], dy = b[1] - a[1], l2 = dx * dx + dy * dy;
+      for (let py = g[1]; py < g[3]; py++) for (let px = g[0]; px < g[2]; px++) {
+        const xs = px + 0.5, ys = py + 0.5;
+        let t = ((xs - a[0]) * dx + (ys - a[1]) * dy) / l2;
+        t = t < 0 ? 0 : t > 1 ? 1 : t;
+        const ox = xs - (a[0] + t * dx), oy = ys - (a[1] + t * dy);
+        const ww = w * (t > 0.85 ? 1 - (t - 0.85) / 0.15 * taper : 1);
+        if (Math.sqrt(ox * ox + oy * oy) > ww) continue;
+        const i = py * CW + px;
+        this.idx[i] = (ox * en[0] + oy * en[1]) >= -0.15 ? lite : mid;
+        this.z[i] = z; this.I[i] = NaN;
+      }
+    }
+    finish() {
+      const idx = this.idx, z = this.z;
+      const filled = new Uint8Array(CW * CH);
+      for (let i = 0; i < idx.length; i++) filled[i] = idx[i] !== 0;
+      const at = (x, y) => [((x % CW) + CW) % CW, ((y % CH) + CH) % CH]; // wrap like np.roll
+      const inner = [], grow = [];
+      for (let y = 0; y < CH; y++) for (let x = 0; x < CW; x++) {
+        const i = y * CW + x;
+        let inn = false, gr = false;
+        for (const [dy, dx] of [[0, 1], [0, -1], [1, 0], [-1, 0]]) {
+          const [nx, ny] = at(x - dx, y - dy);
+          const j = ny * CW + nx;
+          if (filled[i] && filled[j] && z[j] < z[i] - 0.5) inn = true;
+          if (filled[j]) gr = true;
+        }
+        if (inn) inner.push(i);
+        if (gr && !filled[i] && y > 0 && y < CH - 1 && x > 0 && x < CW - 1) grow.push(i);
+      }
+      // v5.4 painted shading (see fighters.py Canvas.finish)
+      const OCC = [[0, 1], [0, -1], [1, 0], [-1, 0], [0, 2], [0, -2], [2, 0], [-2, 0], [1, 1], [-1, -1], [1, -1], [-1, 1]];
+      const nidx = new Uint8Array(idx);
+      for (let y = 0; y < CH; y++) for (let x = 0; x < CW; x++) {
+        const i = y * CW + x, v = idx[i];
+        if (!filled[i] || Number.isNaN(this.I[i]) || v < 2 || v > 13) continue;
+        let occl = false;
+        for (const [dy, dx] of OCC) {
+          const [nx, ny] = at(x - dx, y - dy);
+          const j = ny * CW + nx;
+          if (filled[j] && z[j] > z[i] + 0.5) { occl = true; break; }
+        }
+        const Iv = this.I[i] - (occl ? 0.25 : 0);
+        const p = Iv <= 0.05 ? 0.0 : Iv <= 0.5 ? (Iv - 0.05) / 0.45 : Iv <= 0.95 ? 1.0 + (Iv - 0.5) / 0.45 : 2.0;
+        const fl = Math.floor(p), fr = p - fl;
+        let k = (fr > 0.3 && fr < 0.7) ? fl + (((y + x) & 1) === 0 ? 1 : 0) : Math.floor(p + 0.5);
+        k = k < 0 ? 0 : k > 2 ? 2 : k;
+        nidx[i] = v - (v - 2) % 3 + k;
+      }
+      idx.set(nidx);
+      for (const i of inner) { const v = idx[i]; idx[i] = (v >= 2 && v <= 13) ? v - (v - 2) % 3 : OUT; }
+      for (const i of grow) idx[i] = OUT;
+    }
+  }
+
+  function lerpPose(a, b, t) {
+    const o = {};
+    for (const k in a) o[k] = (k === 'behind' || k === 'trail') ? (t < 0.5 ? a[k] : b[k]) : a[k] + (b[k] - a[k]) * t;
+    return o;
+  }
+
+  function skeleton(p, S) {
+    const k = {};
+    const lean = rad(p.lean), up = v(Math.sin(lean), Math.cos(lean));
+    const hip = v(p.hipx, p.crouch);
+    k.hip = hip; k.waist = add(hip, mul(up, 11)); k.sh = add(hip, mul(up, S.torso));
+    const upr = S.upright ?? 0;
+    const hl = rad(p.lean * (0.6 - 0.45 * upr) + p.head), hup = v(Math.sin(hl), Math.cos(hl));
+    k.neck = add(k.sh, mul(hup, S.neck));
+    k.head = add(add(k.neck, mul(hup, S.head_r * 0.95)), v(0.8 - 0.2 * upr, 0));
+    k.hang = hl;
+    for (const [side, fx, fl] of [['f', p.ff, p.ffl], ['b', p.bf, p.bfl]]) {
+      const hp = add(hip, v(side === 'f' ? 1.5 : -1.5, 0));
+      const [knee, ank] = ik(hp, v(fx, 2.6 + fl), S.thigh, S.shin, +1);
+      k[side + 'hip'] = hp; k[side + 'knee'] = knee; k[side + 'ank'] = ank;
+    }
+    const ba = rad(p.ba), dirv = v(Math.cos(ba), Math.sin(ba));
+    const hand = add(k.sh, v(p.hx, p.hy));
+    k.hand_f = hand; k.tsuba = add(hand, mul(dirv, 2.6));
+    k.hand_b = sub(hand, mul(dirv, 6.0)); k.pommel = sub(hand, mul(dirv, 9.5));
+    k.tip = add(k.tsuba, mul(dirv, S.blade));
+    const wpn = S.weapon ?? 'katana';
+    if (wpn === 'dual' || wpn === 'knives') {
+      // two weapons: the near hand lets go of the hilt and holds its own blade
+      k.pommel = sub(hand, mul(dirv, 3.4));
+      const lean_ = rad(p.lean);
+      k.hand_b = add(hand, wpn === 'dual' ? v(-7.0 - 2.0 * Math.sin(lean_), -5.5) : v(-3.0, -8.5));
+      const a1 = Math.atan2(dirv[1], dirv[0]);
+      const a2 = wpn === 'dual' ? a1 + rad(-38.0) : a1 + rad(-80.0);
+      const d2 = v(Math.cos(a2), Math.sin(a2));
+      k.bdir2 = d2;
+      k.tsuba2 = add(k.hand_b, mul(d2, 2.0));
+      k.pommel2 = sub(k.hand_b, mul(d2, 3.2));
+      k.tip2 = add(k.tsuba2, mul(d2, S.blade * (wpn === 'dual' ? 0.72 : 0.9)));
+    }
+    k.bdir = dirv;
+    const shf = add(k.sh, v(2.2, 0.4 - 2.0 * upr)), shb = add(k.sh, v(-1.8, -0.6 - 2.0 * upr));
+    if (wpn === 'rapier') {   // one-handed: the near hand rests by the hip holding a flintlock, or levels it (pose aim)
+      k.pommel = sub(hand, mul(dirv, 3.0));
+      const rest = add(shb, v(4.0, -(S.uarm + S.farm) * 0.78));
+      const aimp = add(shb, v((S.uarm + S.farm) * 0.93, 1.5));
+      const t_ = p.aim ?? 0;
+      k.hand_b = add(rest, mul(sub(aimp, rest), t_));
+      const pa = rad(-62.0 + 62.0 * t_);
+      k.pdir = v(Math.cos(pa), Math.sin(pa));
+    }
+    k.shf = shf; k.shb = shb;
+    [k.elf, k.hf] = ik(shf, k.hand_f, S.uarm, S.farm, -1);
+    [k.elb, k.hb] = ik(shb, k.hand_b, S.uarm, S.farm, -1);
+    return k;
+  }
+
+  const HANG = 262.0;
+  class Springs {
+    constructor(n, rest, hang = false) { this.n = n; this.hang = hang; this.rest = hang ? HANG : rest; this.ang = Array(n).fill(this.rest); this.vel = Array(n).fill(0); this.prev = null; }
+    step(head, phase, motion = 0) {
+      const vx = this.prev ? head[0] - this.prev[0] : 0, vy = this.prev ? head[1] - this.prev[1] : 0;
+      this.prev = head;
+      if (this.hang) {
+        const sp = vx + motion;
+        const trail = Math.max(-8.0, Math.min(70.0, sp * 12.0));
+        const lift = Math.max(-20.0, Math.min(20.0, vy * 4.0));
+        const amp = 0.5 + 1.8 * Math.min(1.0, Math.abs(sp) / 2.0 + Math.abs(vy) / 3.0);
+        let pa = HANG - trail + lift + amp * Math.sin(phase);
+        for (let i = 0; i < this.n; i++) {
+          const tgt = pa + (i ? 1.2 : 0.0) + amp * 0.6 * Math.sin(phase + i * 0.9);
+          this.vel[i] = this.vel[i] * 0.55 + (tgt - this.ang[i]) * 0.45;
+          this.ang[i] += this.vel[i];
+          pa = this.ang[i];
+        }
+        return this.ang.slice();
+      }
+      const target = this.rest + vx * 11.0 - vy * 5.0 + 4.0 * Math.sin(phase);
+      let pa = target;
+      for (let i = 0; i < this.n; i++) {
+        const tgt = pa + (i ? 6.0 : 0) + 2.5 * Math.sin(phase + i * 0.9);
+        this.vel[i] = this.vel[i] * 0.55 + (tgt - this.ang[i]) * 0.45;
+        this.ang[i] += this.vel[i];
+        pa = this.ang[i];
+      }
+      return this.ang.slice();
+    }
+  }
+
+  function fillPoly(arr, pts, val) {
+    let y0 = Infinity, y1 = -Infinity;
+    for (const p of pts) { y0 = Math.min(y0, p[1]); y1 = Math.max(y1, p[1]); }
+    for (let y = Math.max(0, Math.floor(y0)); y <= Math.min(CH - 1, Math.ceil(y1)); y++) {
+      const yc = y + 0.5, xsArr = [];
+      for (let i = 0; i < pts.length; i++) {
+        const a = pts[i], b = pts[(i + 1) % pts.length];
+        if ((a[1] <= yc && b[1] > yc) || (b[1] <= yc && a[1] > yc))
+          xsArr.push(a[0] + (yc - a[1]) / (b[1] - a[1]) * (b[0] - a[0]));
+      }
+      xsArr.sort((p, q) => p - q);
+      for (let i = 0; i + 1 < xsArr.length; i += 2)
+        for (let x = Math.max(0, Math.round(xsArr[i])); x <= Math.min(CW - 1, Math.round(xsArr[i + 1]) - 1); x++) arr[y * CW + x] = val;
+    }
+  }
+
+  function drawTrail(c, pa, pb, S, W) {
+    const steps = 6, blades = [];
+    for (let i = 0; i <= steps; i++) {
+      const K = skeleton(lerpPose(pa, pb, i / steps), S);
+      blades.push([add(K.tsuba, mul(sub(K.tip, K.tsuba), 0.7)), K.tip]);
+    }
+    const m = new Uint8Array(CW * CH);
+    for (let i = 0; i < steps; i++) {
+      const [a0, a1] = blades[i], [b0, b1] = blades[i + 1];
+      fillPoly(m, [W(a0), W(a1), W(b1), W(b0)], 1 + (i >= steps - 3 ? 1 : 0));
+    }
+    for (let y = 0; y < CH; y++) for (let x = 0; x < CW; x++) {
+      const i = y * CW + x;
+      if (c.idx[i] !== 0) continue;
+      if (m[i] === 2 || (m[i] === 1 && ((x + y) & 1) === 0)) c.idx[i] = ['bokken', 'bo'].includes(S.weapon ?? 'katana') ? SKIN + 2 : STEEL_L;
+    }
+  }
+
+  function render(p, S, tails, prevP, motion = 0) {
+    const c = new Canvas();
+    const sc = S.scale, bld = S.build;
+    const K = skeleton(p, S);
+    const W = q => [RX + q[0] * sc, GY - q[1] * sc];
+    const R = r => r * sc;
+    const hr = S.head_r, hc = K.head, hang = K.hang;
+    const fwd = v(Math.cos(-hang), Math.sin(-hang)), hupv = v(Math.sin(hang), Math.cos(hang));
+    const headLocal = (xs, ys) => {
+      const X = (xs - RX) / sc - hc[0], Y = (GY - ys) / sc - hc[1];
+      return [X * fwd[0] + Y * fwd[1], X * hupv[0] + Y * hupv[1]];
+    };
+    // the body the long hair rests on (torso and hakama capsules)
+    const _fg = S.figure ?? 0, _upr = S.upright ?? 0, _cd = S.chest_depth ?? 1.0;
+    const _rw = 9.2 * bld * (1 - 0.22 * _fg) * _cd, _rc = 10.4 * bld * (1 - 0.12 * _fg) * _cd;
+    const _ln = rad(p.lean), _up = v(Math.sin(_ln), Math.cos(_ln));
+    const _topOld = add(K.sh, mul(sub(K.hip, K.sh), 0.08));
+    const _top = add(_topOld, mul(sub(sub(K.sh, mul(_up, _rc - 1.2)), _topOld), _upr));
+    const bodyCaps = [[K.waist, _top, _rw, _rc], [K.hip, K.waist, 10.0 * bld * (1 + 0.06 * _fg), 9.4 * bld * (1 - 0.18 * _fg)]];
+    const lieOnBack = (q, margin) => {
+      for (const [a, b, ra, rb] of bodyCaps) {
+        const d = sub(b, a), l2 = d[0] * d[0] + d[1] * d[1];
+        const t = l2 < 1e-9 ? 0.0 : Math.max(0.0, Math.min(1.0, ((q[0] - a[0]) * d[0] + (q[1] - a[1]) * d[1]) / l2));
+        const cpt = add(a, mul(d, t)), r = ra + (rb - ra) * t + margin;
+        const off = sub(q, cpt), dist = Math.hypot(off[0], off[1]);
+        if (dist < r && dist > 1e-6) q = add(cpt, mul(off, r / dist));
+      }
+      return q;
+    };
+    const lie = CLAMPED.includes(S.hair);
+    const tailChain = (anchor, seglen, r0, r1, mat, zz, flat = null, push = false) => {
+      let pt = anchor;
+      const n = tails.length;
+      tails.forEach((a, i) => {
+        let nxt = add(pt, mul(v(Math.cos(rad(a)), Math.sin(rad(a))), seglen));
+        if (push && i > 0) nxt = lieOnBack(nxt, r0 * 0.5);
+        c.cap(W(pt), W(nxt), R(r0 + (r1 - r0) * i / n), R(r0 + (r1 - r0) * (i + 1) / n), mat, (push && i > 0) ? 3.36 : zz, 0, flat);
+        pt = nxt;
+      });
+    };
+    const hair = S.hair, band = !!S.headband, fg = S.figure ?? 0;
+    if (CLAMPED.includes(hair)) tails = tails.map(a => Math.min(292.0, Math.max(150.0, a)));
+    const anchor = add(add(hc, mul(fwd, -hr * 0.85)), mul(hupv, hr * 0.35));
+    let tip = null, anchorC = anchor;
+    if (CHAIN_STYLES[hair]) {
+      const [[au, aw], [r0, r1]] = CHAIN_STYLES[hair];
+      let ca = add(add(hc, mul(fwd, hr * au)), mul(hupv, hr * aw));
+      if (hair === 'ponytail') ca = anchor;
+      if (hair === 'braid') {
+        let pt = ca, dv = null;
+        const n = tails.length;
+        tails.forEach((a, i) => {
+          dv = v(Math.cos(rad(a)), Math.sin(rad(a)));
+          let nxt = add(pt, mul(dv, S.tail_len));
+          const rr = r0 + (r1 - r0) * i / n;
+          if (i > 0) {
+            nxt = lieOnBack(nxt, rr * 0.6);
+            const dd = sub(nxt, pt), ln = Math.hypot(dd[0], dd[1]) || 1.0;
+            dv = [dd[0] / ln, dd[1] / ln];
+          }
+          const pv = v(-dv[1], dv[0]);
+          [[0, 0.3], [1, 0.75]].forEach(([j, off]) => {
+            const sgn = (i * 2 + j) % 2 === 0 ? 1 : -1;
+            const q = add(add(pt, mul(sub(nxt, pt), off)), mul(pv, 0.8 * sgn));
+            c.cap(W(q), W(q), R(rr), R(rr), HAIR, i === 0 ? 0 : 3.36);
+          });
+          pt = nxt;
+        });
+        tip = pt;
+        c.cap(W(pt), W(add(pt, mul(dv, 2.6))), R(1.5), R(0.8), HAIR, 3.36);
+      } else tailChain(ca, S.tail_len, r0, r1, HAIR, 0, null, lie);
+      anchorC = ca;
+    }
+    if (band) tailChain(add(add(hc, mul(fwd, -hr * 0.9)), mul(hupv, hr * 0.45)), 4.2, 1.3, 0.9, STEEL_L, 0, STEEL_L);
+    if (S.helm) {   // shikoro: lacquered neck guard flaring behind the helmet
+      const s0 = add(add(hc, mul(fwd, -hr * 0.5)), mul(hupv, hr * 0.2));
+      const s1 = add(add(hc, mul(fwd, -hr * 1.25)), mul(hupv, -hr * 0.9));
+      c.cap(W(s0), W(s1), R(hr * 0.95), R(hr * 0.75), TOP, 0.2);
+      c.cap(W(add(s1, mul(fwd, 0.5))), W(add(add(s1, mul(fwd, 3.5)), mul(hupv, 1.2))), R(1.0), R(1.0), HAIR, 0.25, 0, HAIR + 1);
+    }
+
+    const wpn = S.weapon ?? 'katana';
+    const drawSword = zz => {
+      const en = K.bdir, edge = v(en[1], -en[0]), edgeC = [edge[0], -edge[1]];
+      if (wpn === 'none') return;
+      if (wpn === 'bo') {   // long oak staff held near the middle, iron ferrules at both ends
+        const back = sub(K.pommel, mul(en, S.staff_back ?? 22));
+        c.cap(W(back), W(K.tip), R(1.55), R(1.55), SKIN, zz, 0.1);
+        for (const [e0, e1] of [[back, add(back, mul(en, 3.0))], [sub(K.tip, mul(en, 3.0)), K.tip]])
+          c.cap(W(e0), W(e1), R(1.7), R(1.7), OUT, zz + 0.05, 0, OUT);
+        return;
+      }
+      if (wpn === 'kusarigama') {   // sickle on a short haft, weighted chain from the butt
+        const top = add(K.tsuba, mul(en, 4.0));
+        c.cap(W(K.pommel), W(top), R(1.3), R(1.3), SKIN, zz, 0.1);
+        const bt = add(add(top, mul(edge, S.blade * 0.85)), mul(en, 3.0));
+        c.blade(W(top), W(bt), R(1.5), zz + 0.02, [en[0], -en[1]], STEEL_L, STEEL_M, 0.95);
+        c.cap(W(top), W(top), R(1.4), R(1.4), OUT, zz + 0.03, 0, OUT);
+        let q = K.pommel;
+        const sw = Math.sin(rad(p.ba)) * 4.0;
+        for (let i = 1; i < 9; i++) {
+          const q2 = add(K.pommel, v(-1.2 * i + sw * (i / 8.0) ** 2, -2.2 * i + 0.09 * i * i));
+          c.cap(W(q2), W(q2), R(0.75), R(0.75), STEEL_M, zz - 0.01, 0, (i & 1) ? OUT : STEEL_M);
+          q = q2;
+        }
+        c.cap(W(q), W(q), R(1.9), R(1.9), OUT, zz - 0.02, 0, OUT);
+        return;
+      }
+      if (wpn === 'rapier') {   // long thin blade, a cup hilt and swept quillons
+        const tn = v(-en[1], en[0]);
+        c.blade(W(K.tsuba), W(K.tip), R(0.85), zz, edgeC, STEEL_L, STEEL_M, 0.6);
+        c.cap(W(K.pommel), W(K.tsuba), R(1.1), R(1.1), OUT, zz, 0, OUT);
+        c.cap(W(sub(K.pommel, mul(en, 0.8))), W(sub(K.pommel, mul(en, 0.8))), R(1.3), R(1.3), STEEL_L, zz + 0.02, 0, STEEL_L);
+        c.cap(W(K.tsuba), W(K.tsuba), R(2.3), R(2.3), STEEL_M, zz + 0.05, 0, STEEL_M);
+        const hl_ = sub(add(K.tsuba, mul(tn, 0.8)), mul(en, 0.4));
+        c.cap(W(hl_), W(hl_), R(0.8), R(0.8), STEEL_L, zz + 0.055, 0, STEEL_L);
+        c.cap(W(sub(sub(K.tsuba, mul(tn, 3.6)), mul(en, 0.6))), W(add(add(K.tsuba, mul(tn, 3.6)), mul(en, 0.6))), R(0.55), R(0.55), OUT, zz + 0.06, 0, OUT);
+        return;
+      }
+      if (wpn === 'cutlass') {  // short broad blade with a knuckle bow
+        const tn = v(-en[1], en[0]);
+        c.blade(W(K.tsuba), W(K.tip), R(1.8), zz, edgeC, STEEL_L, STEEL_M, 0.9);
+        c.cap(W(K.pommel), W(K.tsuba), R(1.6), R(1.6), OUT, zz, 0, OUT);
+        c.cap(W(add(K.tsuba, mul(tn, 2.4))), W(add(K.pommel, mul(tn, 2.2))), R(0.6), R(0.6), STEEL_M, zz + 0.05, 0, STEEL_M);
+        c.cap(W(sub(K.tsuba, mul(tn, 2.6))), W(add(K.tsuba, mul(tn, 2.6))), R(1.0), R(1.0), OUT, zz + 0.06, 0, OUT);
+        return;
+      }
+      if (wpn === 'dual' || wpn === 'knives') {
+        const small = wpn === 'knives';
+        for (const [tsu, tp, pom, en_] of [[K.tsuba, K.tip, K.pommel, K.bdir], [K.tsuba2, K.tip2, K.pommel2, K.bdir2]]) {
+          const ed = v(en_[1], -en_[0]);
+          c.blade(W(tsu), W(tp), R(small ? 1.15 : 1.3), zz, [ed[0], -ed[1]], STEEL_L, STEEL_M, small ? 0.9 : 0.75);
+          c.cap(W(pom), W(tsu), R(1.5), R(1.5), OUT, zz, 0, OUT);
+          const tn_ = v(-en_[1], en_[0]), g_ = small ? 1.4 : 2.3;
+          c.cap(W(sub(tsu, mul(tn_, g_))), W(add(tsu, mul(tn_, g_))), R(0.9), R(0.9), OUT, zz + 0.1, 0, OUT);
+          zz = 6.6;   // the near hand's blade sits in front of the body
+        }
+        return;
+      }
+      if (wpn === 'bokken') {
+        const tn = v(-en[1], en[0]);
+        c.blade(W(K.tsuba), W(K.tip), R(1.6), zz, edgeC, SKIN + 2, SKIN + 1, 0.35);
+        c.cap(W(K.pommel), W(K.tsuba), R(1.6), R(1.6), SKIN, zz, 0, SKIN);
+        c.cap(W(sub(K.tsuba, mul(tn, 1.8))), W(add(K.tsuba, mul(tn, 1.8))), R(0.8), R(0.8), OUT, zz + 0.1, 0, OUT);
+        return;
+      }
+      const bigB = wpn === 'nodachi';
+      c.blade(W(K.tsuba), W(K.tip), R(bigB ? 1.6 : 1.35), zz, edgeC);
+      c.cap(W(K.pommel), W(K.tsuba), R(1.7), R(1.7), OUT, zz, 0, OUT);
+      for (const t of [0.25, 0.55, 0.8]) {
+        const q = add(K.pommel, mul(sub(K.tsuba, K.pommel), t));
+        c.cap(W(q), W(q), R(0.7), R(0.7), BOT, zz, 0, BOT + 2);
+      }
+      const tn = v(-en[1], en[0]), gg = bigB ? 3.4 : 2.6;
+      c.cap(W(sub(K.tsuba, mul(tn, gg))), W(add(K.tsuba, mul(tn, gg))), R(1.1), R(1.1), OUT, zz + 0.1, 0, OUT);
+    };
+    if (p.behind) drawSword(0.5);
+    const fl = S.flare ?? 1.0;
+    // cloth: how fast each limb is moving since the previous frame
+    const KP = prevP ? skeleton(prevP, S) : null;
+    const vel = key => KP ? sub(K[key], KP[key]) : [0.0, 0.0];
+    const spd = q => Math.hypot(q[0], q[1]);
+    const vfa = vel('fank'), vba = vel('bank'), vfe = vel('elf'), vbe = vel('elb'), vhp = vel('hip');
+    const armMat = S.bare_arms ? SKIN : TOP, armB = S.bare_arms ? -0.2 : -0.25, foreMat = S.gauntlets ? TOP : SKIN;
+    const mv = [motion, 0.0];
+    const lag = va => { const q = add(mul(va, 0.5), mul(add(vhp, mv), 0.4)); const n = spd(q); return n > 4.5 ? mul(q, 4.5 / n) : q; };
+    const lagF = lag(vfa), lagB = lag(vba);
+    const hemF = 1.0 + 0.3 * Math.min(1.0, spd(add(vfa, mv)) / 4.0), hemB = 1.0 + 0.3 * Math.min(1.0, spd(add(vba, mv)) / 4.0);
+    const slvF = 1.0 + 0.15 * Math.min(1.0, spd(vfe) / 5.0), slvB = 1.0 + 0.15 * Math.min(1.0, spd(vbe) / 5.0);
+    c.cap(W(K.fhip), W(K.fknee), R(7.2 * bld), R(7.6 * bld), BOT, 1, -0.22);
+    c.cap(W(K.fknee), W(sub(K.fank, lagF)), R(7.6 * bld), R(9.2 * bld * fl * hemF), BOT, 1, -0.22);
+    const sf = 1 - 0.15 * fg;
+    c.cap(W(add(K.fank, v(0, -0.6))), W(add(K.fank, v(7.5, -1.6))), R(2.3 * sf), R(1.9 * sf), SKIN, 1.05, -0.2);
+    if (S.torn) {   // the sleeve torn away above the elbow
+      const midF = add(K.shf, mul(sub(K.elf, K.shf), 0.5));
+      c.cap(W(midF), W(K.elf), R(3.4 * bld), R(3.2 * bld), SKIN, 2, -0.2);
+      c.cap(W(K.shf), W(midF), R(4.6 * bld * (1 - 0.12 * fg)), R(4.4 * bld * (1 - 0.12 * fg)), armMat, 2.01, armB);
+    } else c.cap(W(K.shf), W(K.elf), R(4.6 * bld * (1 - 0.12 * fg)), R(4.1 * bld * (1 - 0.12 * fg) * slvF), armMat, 2, armB);
+    c.cap(W(K.elf), W(K.hf), R(3.2 * bld), R(2.7 * bld), foreMat, 2, -0.2);
+    c.cap(W(K.hf), W(K.hf), R(3.1 * sf), R(3.1 * sf), SKIN, 2, -0.15);
+    const upr = S.upright ?? 0, cd = S.chest_depth ?? 1.0;
+    const rw = 9.2 * bld * (1 - 0.22 * fg) * cd, rc = 10.4 * bld * (1 - 0.12 * fg) * cd;
+    const lean_ = rad(p.lean), up_ = v(Math.sin(lean_), Math.cos(lean_));
+    const lean = lean_, up = up_, side = v(up[1], -up[0]);
+    if (S.sode) c.cap(W(add(K.shf, mul(up, 1.0))), W(add(sub(K.shf, mul(up, 7.5)), mul(side, 1.0))), R(4.6 * bld), R(5.2 * bld), TOP, 2.05, 0.05);
+    c.cap(W(K.hip), W(K.waist), R(10.0 * bld * (1 + 0.06 * fg)), R(9.4 * bld * (1 - 0.18 * fg)), BOT, 3);
+    const topOld = add(K.sh, mul(sub(K.hip, K.sh), 0.08));
+    const top = add(topOld, mul(sub(sub(K.sh, mul(up_, rc - 1.2)), topOld), upr));
+    c.cap(W(K.waist), W(top), R(rw), R(rc), TOP, 3);
+    if (S.stripes) {   // a sailor's striped shirt
+      for (let k = 0; k < 6; k++) {
+        const a0 = add(K.waist, mul(sub(top, K.waist), 0.08 + 0.17 * k));
+        c.cap(W(sub(a0, mul(side, rw * 0.9))), W(add(a0, mul(side, rw * 0.9))), R(0.6), R(0.6), TOP, 3.02, 0, TOP);
+      }
+    }
+    if (S.torn) {   // cuts across the keikogi
+      for (const [a_, b_] of [[0.25, 0.55], [0.6, 0.8]]) {
+        const q0 = add(add(K.waist, mul(sub(top, K.waist), a_)), mul(side, rw * 0.1));
+        const q1 = add(add(K.waist, mul(sub(top, K.waist), b_)), mul(side, rw * 0.75));
+        c.cap(W(q0), W(q1), R(0.45), R(0.45), OUT, 3.03, 0, OUT);
+        c.cap(W(add(q0, mul(up, 0.7))), W(add(q1, mul(up, 0.7))), R(0.4), R(0.4), SKIN, 3.031, 0, SKIN + 1);
+      }
+    }
+    if (S.lames) {   // lacquered armour plates: dark seams and gold lacing
+      for (let k = 0; k < 4; k++) {
+        const a0 = add(K.waist, mul(sub(top, K.waist), 0.18 + 0.2 * k));
+        c.cap(W(sub(a0, mul(side, rw * 0.82))), W(add(a0, mul(side, rw * 0.82))), R(0.45), R(0.45), OUT, 3.02, 0, OUT);
+        for (const j of [-0.45, 0.0, 0.45]) {
+          const q = add(add(a0, mul(side, rw * j)), mul(up, 1.6));
+          c.cap(W(q), W(q), R(0.55), R(0.55), HAIR, 3.03, 0, HAIR + 1);
+        }
+      }
+    }
+    if (S.kusazuri) {   // armour skirt hanging from the waist
+      const k0 = sub(K.waist, mul(up, 1.0)), k1 = sub(sub(K.hip, mul(up, 8.0)), mul(vhp, 0.5));
+      c.cap(W(k0), W(k1), R(10.6 * bld), R(12.0 * bld), TOP, 3.15);
+      for (let k = 1; k < 4; k++) {
+        const q = add(k0, mul(sub(k1, k0), k / 3.6));
+        c.cap(W(sub(q, mul(side, 11.0 * bld))), W(add(q, mul(side, 11.0 * bld))), R(0.45), R(0.45), OUT, 3.16, 0, OUT);
+      }
+    }
+    const ob = K.waist;
+    const obi = S.obi ?? 0, ow = 8.5 * bld * (1 - 0.2 * fg);
+    if (obi === 0) c.cap(W(sub(ob, mul(side, ow))), W(add(ob, mul(side, ow))), R(1.5), R(1.5), BOT, 3.2, 0, BOT);
+    else if (obi === 3) { /* no sash */ }
+    else c.cap(W(sub(ob, mul(side, ow))), W(add(ob, mul(side, ow))), R(1.9), R(1.9), BOT, 3.2, 0, obi === 1 ? HAIR + 1 : TOP + 2);
+    const ch = S.chest ?? 0;
+    if (ch > 0.01) {
+      const rb = 2.6 + 3.0 * ch, d = 10.1 * bld * cd + 3.2 * ch - rb;
+      const bc = add(sub(K.sh, mul(up, 7.2)), mul(side, d));
+      c.cap(W(add(bc, mul(up, 0.8))), W(sub(bc, mul(up, 0.6))), R(rb), R(rb), TOP, 3.05);
+    }
+    if (S.kesa) {   // monk's stole over one shoulder, with prayer beads
+      const k0 = add(add(K.sh, mul(side, 2.0)), mul(up, 0.5)), k1 = add(add(K.waist, mul(side, rw * 0.9)), mul(up, 1.0));
+      c.cap(W(k0), W(k1), R(2.6), R(2.6), HAIR, 3.25, 0.1);
+      for (let n = 0; n < 7; n++) {
+        const t_ = 0.08 + (0.92 - 0.08) * n / 6;
+        const q = sub(add(K.sh, mul(side, 1.5 + 5.5 * t_)), mul(up, 2.0 + 11.0 * t_ * (1.15 - t_)));
+        c.cap(W(q), W(q), R(0.9), R(0.9), OUT, 3.42, 0, OUT);
+      }
+    }
+    const nb = sub(sub(K.sh, mul(up, 1.5 * upr)), mul(side, 1.2 * upr));
+    c.cap(W(nb), W(add(K.neck, v(0, 0.5))), R(3.4 * (1 - 0.25 * fg) * (1 + 0.3 * upr)), R(3.0 * (1 - 0.25 * fg) * (1 - 0.1 * upr)), SKIN, 3.3);
+    if (S.ruff) {   // a starched white ruff around the neck
+      const neckTop = add(K.neck, v(0, 0.5)), rq = add(nb, mul(sub(neckTop, nb), 0.25));
+      c.cap(W(sub(rq, mul(side, 1.2))), W(add(rq, mul(side, 3.2))), R(3.9), R(3.6), STEEL_L, 3.36, 0, STEEL_L);
+      c.cap(W(sub(sub(rq, mul(side, 0.8)), mul(up, 1.6))), W(sub(add(rq, mul(side, 2.8)), mul(up, 1.6))), R(1.6), R(1.4), STEEL_L, 3.361, 0, STEEL_M);
+      for (let k = -2; k < 3; k++) {
+        const q = sub(add(rq, mul(side, 1.0 * k + 1.0)), mul(up, 2.6));
+        c.cap(W(q), W(add(q, mul(up, 1.0))), R(0.35), R(0.35), STEEL_L, 3.37, 0, TOP + 2);
+      }
+    }
+    if (S.vneck) c.cap(W(add(add(K.sh, mul(up, 1.0)), mul(side, 1.6))), W(add(sub(K.sh, mul(up, 4.0)), mul(side, rc * 0.68))), R(1.6), R(0.8), SKIN, 3.35);
+    const lap0 = add(K.sh, v(2.5, 1.0)), lap1 = add(sub(K.sh, mul(up, 12)), mul(side, 4));
+    c.cap(W(lap0), W(lap1), R(0.9), R(0.9), TOP, 3.4, 0, TOP);
+    // head
+    c.cap(W(hc), W(hc), R(hr), R(hr), SKIN, 4);
+    const big = !!CHAIN_STYLES[hair];
+    const hcap = add(add(hc, mul(fwd, big ? -1.2 : -0.8)), mul(hupv, big ? 1.0 : 0.9));
+    const hairMask = (xs, ys) => { const [u, w] = headLocal(xs, ys); return !(u > -1.6 && w < 2.6); };
+    if (hair !== 'bald') { const rr = R(hr + (big ? 0.9 : 0.5)); c.cap(W(hcap), W(hcap), rr, rr, HAIR, 4.1, 0, null, hairMask); }
+    if (band) c.cap(W(hc), W(hc), R(hr + 0.6), R(hr + 0.6), STEEL_L, 4.2, 0, STEEL_L, (xs, ys) => { const w = headLocal(xs, ys)[1]; return w > 2.9 && w < 4.6; });
+    if (hair === 'topknot') {
+      const tk0 = add(add(hc, mul(hupv, hr + 0.2)), mul(fwd, -1.5)), tk1 = add(add(tk0, mul(fwd, 4.0)), mul(hupv, 1.2));
+      c.cap(W(tk0), W(tk1), R(2.0), R(1.6), HAIR, 4.3);
+    } else if (hair === 'bun') {
+      const bc = add(add(hc, mul(fwd, -hr * 0.85)), mul(hupv, hr * 0.65));
+      c.cap(W(bc), W(bc), R(3.0), R(3.0), HAIR, 4.3);
+    } else if (hair === 'ponytail') c.cap(W(anchor), W(anchor), R(1.6), R(1.6), TOP, 4.2, 0, TOP);
+    else if (hair === 'halfup') {
+      const bc = add(add(hc, mul(fwd, -hr * 0.7)), mul(hupv, hr * 0.75));
+      c.cap(W(bc), W(bc), R(2.6), R(2.6), HAIR, 4.3);
+    }
+    if (hair === 'highpony' || hair === 'lowpony') {
+      for (const k of [-1, 1]) {
+        const q = add(add(anchorC, mul(fwd, 1.7 * k)), mul(hupv, 0.9));
+        c.cap(W(anchorC), W(q), R(1.0), R(1.3), TOP, 4.25, 0, TOP + 2);
+      }
+      c.cap(W(anchorC), W(anchorC), R(1.1), R(1.1), TOP, 4.26, 0, TOP);
+    }
+    if (hair === 'braid' && tip) c.cap(W(tip), W(tip), R(1.4), R(1.4), TOP, 4.25, 0, TOP + 2);
+    if (S.bangs && hair !== 'bald') {
+      const rb = R(hr + (big ? 0.9 : 0.5));
+      c.cap(W(hcap), W(hcap), rb, rb, HAIR, 4.15, 0, null, (xs, ys) => {
+        const [u, w] = headLocal(xs, ys);
+        const zig = (Math.floor(u * 1.2) & 1) * 0.9;
+        return u > -1.6 && w >= 1.3 + zig;
+      });
+    }
+    if (S.sidelocks && hair !== 'bald') {
+      const s0 = add(add(hc, mul(fwd, 0.6)), mul(hupv, 1.8)), s1 = add(add(hc, mul(fwd, 1.6)), mul(hupv, -7.5));
+      c.cap(W(s0), W(s1), R(1.7), R(0.9), HAIR, 4.22);
+    }
+    if (S.ears && !S.helm && !S.hood) {   // the ear, just behind the middle of the head
+      const ea = add(add(hc, mul(fwd, -hr * 0.12)), mul(hupv, -0.4));
+      c.cap(W(add(ea, mul(hupv, 1.1))), W(sub(ea, mul(hupv, 1.0))), R(1.7), R(1.4), SKIN, 4.08, 0, SKIN);
+      c.cap(W(add(ea, mul(hupv, 0.6))), W(sub(ea, mul(hupv, 0.5))), R(0.95), R(0.8), SKIN, 4.085, 0, SKIN + 1);
+      const [ix, iy] = W(add(ea, mul(fwd, 0.35)));
+      const xi = Math.trunc(ix), yi = Math.trunc(iy);
+      if (xi >= 0 && xi < CW && yi >= 0 && yi < CH) { c.idx[yi * CW + xi] = OUT; c.z[yi * CW + xi] = 4.09; }
+    }
+    const nose = add(add(hc, mul(fwd, hr + 0.4)), mul(hupv, 0.2));
+    c.cap(W(nose), W(nose), R(1.1), R(1.1), SKIN, 4.05, 0, SKIN + 1);
+    const [ex, ey] = W(add(add(hc, mul(fwd, hr * 0.62)), mul(hupv, 1.3)));
+    const exi = Math.trunc(ex), eyi = Math.trunc(ey);
+    if (exi >= 0 && exi < CW && eyi >= 0 && eyi < CH) {
+      c.idx[eyi * CW + exi] = OUT; c.z[eyi * CW + exi] = 4.06;
+      if ((S.eyes ?? 0) === 1) for (const [qx, qy] of [[exi, eyi - 1], [exi + 1, eyi - 1]])
+        if (qx >= 0 && qx < CW && qy >= 0 && qy < CH) { c.idx[qy * CW + qx] = OUT; c.z[qy * CW + qx] = 4.06; }
+    }
+    if (S.lips) {
+      const [mx, my] = W(add(add(hc, mul(fwd, hr * 0.9)), mul(hupv, -2.4)));
+      const mxi = Math.trunc(mx), myi = Math.trunc(my);
+      if (mxi >= 0 && mxi < CW && myi >= 0 && myi < CH) { c.idx[myi * CW + mxi] = HAIR + 1; c.z[myi * CW + mxi] = 4.06; }
+    }
+    if (S.hood) {   // cloth hood over head and face, open at the eyes
+      const hq = add(hc, mul(hupv, 0.4));
+      c.cap(W(hq), W(hq), R(hr + 0.8), R(hr + 0.8), TOP, 4.4, 0, null, (xs, ys) => { const [u, w] = headLocal(xs, ys); return !(u > 1.2 && w > 0.0 && w < 2.8); });
+      c.cap(W(sub(sub(hc, mul(fwd, 2.0)), mul(hupv, 3.5))), W(sub(sub(hc, mul(fwd, 5.5)), mul(hupv, 7.0))), R(2.6), R(1.6), TOP, 4.39);
+    }
+    if (S.menpo) {   // red lacquer face mask over the lower face
+      const mq = add(hc, mul(fwd, 0.6));
+      c.cap(W(mq), W(mq), R(hr + 0.4), R(hr + 0.4), BOT, 4.45, 0.15, null, (xs, ys) => { const [u, w] = headLocal(xs, ys); return u > -0.5 && w < 0.6; });
+      const mt = add(add(hc, mul(fwd, hr * 0.85)), mul(hupv, -2.4));
+      c.cap(W(sub(mt, mul(fwd, 1.6))), W(add(mt, mul(fwd, 0.6))), R(0.5), R(0.5), OUT, 4.46, 0, OUT);
+      for (const k of [-1, 1]) {   // bristling moustache
+        const q = add(add(hc, mul(fwd, hr * 0.95)), mul(hupv, -1.0));
+        c.cap(W(q), W(add(add(q, mul(fwd, 1.8)), mul(hupv, 0.8 * k - 0.6))), R(0.5), R(0.4), STEEL_L, 4.47, 0, STEEL_L);
+      }
+    }
+    if (S.beard) {   // moustache and pointed beard
+      for (const k of [-1, 1]) {
+        const q = add(add(hc, mul(fwd, hr * 0.92)), mul(hupv, -1.2));
+        c.cap(W(q), W(sub(add(add(q, mul(fwd, 1.4)), mul(hupv, -0.6 + 0.9 * k)), mul(fwd, k < 0 ? 1.6 : 0))), R(0.6), R(0.45), HAIR, 4.46, 0, HAIR);
+      }
+      c.cap(W(add(add(hc, mul(fwd, hr * 0.7)), mul(hupv, -hr * 0.7))), W(add(add(hc, mul(fwd, hr * 0.85)), mul(hupv, -hr * 1.15))), R(1.4), R(0.5), HAIR, 4.46);
+    }
+    if (S.knitcap) {   // a sailor's wool cap
+      const cq = sub(add(hc, mul(hupv, 1.2)), mul(fwd, 0.6));
+      c.cap(W(cq), W(cq), R(hr + 1.0), R(hr + 1.0), BOT, 4.5, 0.1, null, (xs, ys) => headLocal(xs, ys)[1] > 3.1);
+      c.cap(W(sub(add(hc, mul(hupv, 3.6)), mul(fwd, hr + 0.2))), W(add(add(hc, mul(hupv, 3.6)), mul(fwd, hr - 0.6))), R(1.1), R(1.1), BOT, 4.51, 0, BOT + 2);
+      const q = sub(add(hc, mul(hupv, hr + 1.6)), mul(fwd, 1.5));
+      c.cap(W(q), W(sub(sub(q, mul(fwd, 3.0)), mul(hupv, 0.6))), R(1.6), R(1.2), BOT, 4.52);
+    }
+    if (S.hat) {   // a Dutch capotain: tall black crown, wide brim, gilt buckle
+      const br = add(hc, mul(hupv, hr * 0.78));
+      c.cap(W(sub(br, mul(fwd, hr * 1.75))), W(add(br, mul(fwd, hr * 1.8))), R(1.2), R(1.0), TOP, 4.6, 0.1);
+      c.cap(W(sub(add(br, mul(hupv, hr * 0.8)), mul(fwd, 0.3))), W(sub(add(br, mul(hupv, hr * 1.5)), mul(fwd, 0.9))), R(hr * 0.8), R(hr * 0.7), TOP, 4.61, 0.15);
+      c.cap(W(sub(add(br, mul(hupv, 1.6)), mul(fwd, hr * 0.85))), W(add(add(br, mul(hupv, 1.6)), mul(fwd, hr * 0.8))), R(0.8), R(0.8), HAIR, 4.62, 0, HAIR + 2);
+      const bk = add(add(br, mul(hupv, 1.6)), mul(fwd, hr * 0.5));
+      c.cap(W(bk), W(bk), R(1.0), R(1.0), STEEL_L, 4.63, 0, STEEL_L);
+    }
+    if (S.helm) {   // kabuto bowl with gold kuwagata horns
+      const hb_ = sub(add(hc, mul(hupv, 0.6)), mul(fwd, 0.4));
+      c.cap(W(hb_), W(hb_), R(hr + 1.4), R(hr + 1.4), TOP, 4.5, 0.1, null, (xs, ys) => headLocal(xs, ys)[1] > 1.2);
+      c.cap(W(sub(add(hc, mul(hupv, 1.6)), mul(fwd, hr + 1.6))), W(add(add(hc, mul(hupv, 1.6)), mul(fwd, hr + 1.2))), R(1.0), R(1.0), OUT, 4.52, 0, OUT);
+      const base = add(add(hc, mul(fwd, hr * 0.75)), mul(hupv, hr * 0.55));
+      for (const [k, lh] of [[1, 0.55], [-1, -0.2]]) {
+        const h1 = add(add(base, mul(hupv, 5.0)), mul(fwd, 2.5 * lh));
+        const h2 = add(add(h1, mul(hupv, 6.5)), mul(fwd, 4.0 * lh - 1.5));
+        c.cap(W(base), W(h1), R(1.1), R(0.9), HAIR, 4.55 + 0.01 * k);
+        c.cap(W(h1), W(h2), R(0.9), R(0.5), HAIR, 4.55 + 0.01 * k);
+      }
+      c.cap(W(base), W(base), R(1.6), R(1.6), HAIR, 4.57, 0, HAIR + 2);
+    }
+    c.cap(W(K.bhip), W(K.bknee), R(7.2 * bld), R(7.6 * bld), BOT, 5);
+    c.cap(W(K.bknee), W(sub(K.bank, lagB)), R(7.6 * bld), R(9.2 * bld * fl * hemB), BOT, 5);
+    c.cap(W(add(K.bank, v(0, -0.6))), W(add(K.bank, v(7.5, -1.6))), R(2.3 * sf), R(1.9 * sf), SKIN, 5.05);
+    if (!p.behind) drawSword(6);
+    if (S.torn) {
+      const midB = add(K.shb, mul(sub(K.elb, K.shb), 0.55));
+      c.cap(W(midB), W(K.elb), R(3.5 * bld), R(3.3 * bld), SKIN, 7);
+      c.cap(W(K.shb), W(midB), R(4.8 * bld * (1 - 0.12 * fg)), R(4.6 * bld * (1 - 0.12 * fg)), armMat, 7.01);
+      for (const j of [-1, 1]) {   // ragged hem
+        const q = add(midB, v(j * 2.2, -0.6 * j));
+        c.cap(W(q), W(add(q, v(0.3, -1.4))), R(0.6), R(0.4), armMat, 7.02, 0, TOP);
+      }
+    } else c.cap(W(K.shb), W(K.elb), R(4.8 * bld * (1 - 0.12 * fg)), R(4.3 * bld * (1 - 0.12 * fg) * slvB), armMat, 7);
+    c.cap(W(K.elb), W(K.hb), R(3.3 * bld), R(2.8 * bld), foreMat, 7);
+    c.cap(W(K.hb), W(K.hb), R(3.2 * sf), R(3.2 * sf), SKIN, 7.1);
+    if (S.pistol) {   // the flintlock in the near hand
+      const pd = K.pdir, pn = v(-pd[1], pd[0]), hb = K.hb;
+      c.cap(W(sub(hb, mul(pd, 0.5))), W(sub(sub(hb, mul(pd, 2.6)), mul(pn, 5.0))), R(1.9), R(1.6), HAIR, 7.15);
+      c.cap(W(sub(hb, mul(pd, 1.0))), W(add(hb, mul(pd, 12.5))), R(1.25), R(1.05), OUT, 7.16, 0, OUT);
+      c.cap(W(add(add(hb, mul(pd, 1.5)), mul(pn, 0.6))), W(add(add(hb, mul(pd, 11.5)), mul(pn, 0.6))), R(0.45), R(0.4), STEEL_L, 7.17, 0, STEEL_M);
+      c.cap(W(add(hb, mul(pd, 12.0))), W(add(hb, mul(pd, 12.0))), R(1.5), R(1.5), OUT, 7.165, 0, OUT);
+      c.cap(W(add(add(hb, mul(pn, 2.2)), mul(pd, 0.8))), W(add(add(hb, mul(pn, 2.6)), mul(pd, 2.8))), R(0.8), R(0.6), STEEL_L, 7.18, 0, STEEL_L);
+    }
+    if (S.sode) {   // near shoulder plate over the arm
+      c.cap(W(add(K.shb, mul(up, 1.2))), W(add(sub(K.shb, mul(up, 7.0)), mul(side, -1.0))), R(4.8 * bld), R(5.6 * bld), TOP, 7.3, 0.1);
+      c.cap(W(sub(sub(K.shb, mul(up, 3.0)), mul(side, 4.8 * bld))), W(add(sub(K.shb, mul(up, 3.0)), mul(side, 4.8 * bld))), R(0.45), R(0.45), OUT, 7.31, 0, OUT);
+    }
+    c.finish();
+    if (p.trail && prevP) drawTrail(c, prevP, p, S, W);
+    return c.idx;
+  }
+
+  // Render one animation (springs restart per animation, exactly as the build does).
+  function renderAnim(anim, S) {
+    const st = CHAIN_STYLES[S.hair];
+    const rest = st ? st[2] : 190.0;
+    const nseg = st ? st[3] : 3;
+    const spr = new Springs(nseg, rest, CLAMPED.includes(S.hair));
+    const mot = anim.motion || 0;
+    const poses = (anim.by && S.name && anim.by[S.name]) || anim.poses, frames = [];
+    const passes = anim.loop ? 3 : 1;
+    if (!anim.loop) for (let i = 0; i < 4; i++) spr.step(skeleton(poses[0], S).head, 0);
+    for (let ps = 0; ps < passes; ps++) poses.forEach((pz, i) => {
+      const tails = spr.step(skeleton(pz, S).head, i * 1.1, mot);
+      if (ps === passes - 1) {
+        let prevP = i > 0 ? poses[i - 1] : (anim.loop ? poses[poses.length - 1] : null);
+        if (anim.name.startsWith('strike') && i === 3) prevP = poses[2];
+        frames.push(render(pz, S, tails, prevP, mot));
+      }
+    });
+    return frames;
+  }
+
+  const api = { CW, CH, RX, GY, renderAnim, render, skeleton };
+  if (typeof module !== 'undefined') module.exports = api; else root.KomoRender = api;
+})(this);
+
+</script>
+<script>
+const ANIMS = [{"name":"idle_low","loop":true,"motion":0.0,"poses":[{"crouch":43.0,"hipx":0.0,"lean":8.0,"ff":14.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":14.0,"hy":-22.0,"ba":-22.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":43.35355339059328,"hipx":0.0,"lean":8.424264068711928,"ff":14.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":14.0,"hy":-21.505025253169418,"ba":-22.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":43.5,"hipx":0.0,"lean":8.6,"ff":14.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":14.0,"hy":-21.3,"ba":-22.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":43.35355339059328,"hipx":0.0,"lean":8.424264068711928,"ff":14.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":14.0,"hy":-21.505025253169418,"ba":-22.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":43.0,"hipx":0.0,"lean":8.0,"ff":14.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":14.0,"hy":-22.0,"ba":-22.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":42.64644660940672,"hipx":0.0,"lean":7.575735931288071,"ff":14.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":14.0,"hy":-22.494974746830582,"ba":-22.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":42.5,"hipx":0.0,"lean":7.4,"ff":14.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":14.0,"hy":-22.7,"ba":-22.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":42.64644660940672,"hipx":0.0,"lean":7.575735931288071,"ff":14.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":14.0,"hy":-22.494974746830582,"ba":-22.0,"head":0.0,"behind":0,"trail":0,"aim":0.0}],"by":{"sailor":[{"crouch":43.0,"hipx":1.4725742234138188,"lean":8.0,"ff":14.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":14.0,"hy":-22.0,"ba":-22.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":43.35355339059328,"hipx":1.7098572118240825,"lean":9.909188309203678,"ff":14.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":14.0,"hy":-21.505025253169418,"ba":-22.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":43.5,"hipx":0.9455290352692446,"lean":10.7,"ff":14.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":14.0,"hy":-21.3,"ba":-22.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":43.35355339059328,"hipx":-0.37267722652876817,"lean":9.909188309203678,"ff":14.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":14.0,"hy":-21.505025253169418,"ba":-22.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":43.0,"hipx":-1.4725742234138186,"lean":8.0,"ff":14.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":14.0,"hy":-22.0,"ba":-22.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":42.64644660940672,"hipx":-1.7098572118240825,"lean":6.090811690796322,"ff":14.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":14.0,"hy":-22.494974746830582,"ba":-22.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":42.5,"hipx":-0.9455290352692448,"lean":5.300000000000001,"ff":14.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":14.0,"hy":-22.7,"ba":-22.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":42.64644660940672,"hipx":0.37267722652876795,"lean":6.090811690796322,"ff":14.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":14.0,"hy":-22.494974746830582,"ba":-22.0,"head":0.0,"behind":0,"trail":0,"aim":0.0}]}},{"name":"idle_mid","loop":true,"motion":0.0,"poses":[{"crouch":45.0,"hipx":0.0,"lean":5.0,"ff":13.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":15.0,"hy":-13.0,"ba":14.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":45.35355339059328,"hipx":0.0,"lean":5.424264068711929,"ff":13.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":15.0,"hy":-12.505025253169418,"ba":14.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":45.5,"hipx":0.0,"lean":5.6,"ff":13.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":15.0,"hy":-12.3,"ba":14.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":45.35355339059328,"hipx":0.0,"lean":5.424264068711929,"ff":13.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":15.0,"hy":-12.505025253169416,"ba":14.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":45.0,"hipx":0.0,"lean":5.0,"ff":13.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":15.0,"hy":-13.0,"ba":14.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":44.64644660940672,"hipx":0.0,"lean":4.575735931288071,"ff":13.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":15.0,"hy":-13.494974746830582,"ba":14.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":44.5,"hipx":0.0,"lean":4.4,"ff":13.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":15.0,"hy":-13.7,"ba":14.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":44.64644660940672,"hipx":0.0,"lean":4.575735931288071,"ff":13.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":15.0,"hy":-13.494974746830584,"ba":14.0,"head":0.0,"behind":0,"trail":0,"aim":0.0}],"by":{"sailor":[{"crouch":45.0,"hipx":1.4725742234138188,"lean":5.0,"ff":13.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":15.0,"hy":-13.0,"ba":14.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":45.35355339059328,"hipx":1.7098572118240825,"lean":6.909188309203678,"ff":13.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":15.0,"hy":-12.505025253169418,"ba":14.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":45.5,"hipx":0.9455290352692446,"lean":7.699999999999999,"ff":13.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":15.0,"hy":-12.3,"ba":14.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":45.35355339059328,"hipx":-0.37267722652876817,"lean":6.909188309203678,"ff":13.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":15.0,"hy":-12.505025253169416,"ba":14.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":45.0,"hipx":-1.4725742234138186,"lean":5.0,"ff":13.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":15.0,"hy":-13.0,"ba":14.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":44.64644660940672,"hipx":-1.7098572118240825,"lean":3.090811690796322,"ff":13.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":15.0,"hy":-13.494974746830582,"ba":14.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":44.5,"hipx":-0.9455290352692448,"lean":2.3000000000000003,"ff":13.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":15.0,"hy":-13.7,"ba":14.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":44.64644660940672,"hipx":0.37267722652876795,"lean":3.0908116907963215,"ff":13.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":15.0,"hy":-13.494974746830584,"ba":14.0,"head":0.0,"behind":0,"trail":0,"aim":0.0}]}},{"name":"idle_high","loop":true,"motion":0.0,"poses":[{"crouch":46.0,"hipx":0.0,"lean":0.0,"ff":12.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":8.0,"hy":6.0,"ba":166.0,"head":0.0,"behind":1,"trail":0,"aim":0.0},{"crouch":46.35355339059328,"hipx":0.0,"lean":0.42426406871192845,"ff":12.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":8.0,"hy":6.494974746830583,"ba":166.0,"head":0.0,"behind":1,"trail":0,"aim":0.0},{"crouch":46.5,"hipx":0.0,"lean":0.6,"ff":12.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":8.0,"hy":6.7,"ba":166.0,"head":0.0,"behind":1,"trail":0,"aim":0.0},{"crouch":46.35355339059328,"hipx":0.0,"lean":0.4242640687119285,"ff":12.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":8.0,"hy":6.494974746830583,"ba":166.0,"head":0.0,"behind":1,"trail":0,"aim":0.0},{"crouch":46.0,"hipx":0.0,"lean":7.347880794884119e-17,"ff":12.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":8.0,"hy":6.0,"ba":166.0,"head":0.0,"behind":1,"trail":0,"aim":0.0},{"crouch":45.64644660940672,"hipx":0.0,"lean":-0.42426406871192845,"ff":12.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":8.0,"hy":5.505025253169417,"ba":166.0,"head":0.0,"behind":1,"trail":0,"aim":0.0},{"crouch":45.5,"hipx":0.0,"lean":-0.6,"ff":12.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":8.0,"hy":5.3,"ba":166.0,"head":0.0,"behind":1,"trail":0,"aim":0.0},{"crouch":45.64644660940672,"hipx":0.0,"lean":-0.4242640687119286,"ff":12.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":8.0,"hy":5.505025253169417,"ba":166.0,"head":0.0,"behind":1,"trail":0,"aim":0.0}],"by":{"sailor":[{"crouch":46.0,"hipx":1.4725742234138188,"lean":0.0,"ff":12.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":8.0,"hy":6.0,"ba":166.0,"head":0.0,"behind":1,"trail":0,"aim":0.0},{"crouch":46.35355339059328,"hipx":1.7098572118240825,"lean":1.9091883092036779,"ff":12.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":8.0,"hy":6.494974746830583,"ba":166.0,"head":0.0,"behind":1,"trail":0,"aim":0.0},{"crouch":46.5,"hipx":0.9455290352692446,"lean":2.6999999999999997,"ff":12.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":8.0,"hy":6.7,"ba":166.0,"head":0.0,"behind":1,"trail":0,"aim":0.0},{"crouch":46.35355339059328,"hipx":-0.37267722652876817,"lean":1.9091883092036783,"ff":12.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":8.0,"hy":6.494974746830583,"ba":166.0,"head":0.0,"behind":1,"trail":0,"aim":0.0},{"crouch":46.0,"hipx":-1.4725742234138186,"lean":3.306546357697853e-16,"ff":12.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":8.0,"hy":6.0,"ba":166.0,"head":0.0,"behind":1,"trail":0,"aim":0.0},{"crouch":45.64644660940672,"hipx":-1.7098572118240825,"lean":-1.9091883092036779,"ff":12.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":8.0,"hy":5.505025253169417,"ba":166.0,"head":0.0,"behind":1,"trail":0,"aim":0.0},{"crouch":45.5,"hipx":-0.9455290352692448,"lean":-2.6999999999999997,"ff":12.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":8.0,"hy":5.3,"ba":166.0,"head":0.0,"behind":1,"trail":0,"aim":0.0},{"crouch":45.64644660940672,"hipx":0.37267722652876795,"lean":-1.9091883092036785,"ff":12.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":8.0,"hy":5.505025253169417,"ba":166.0,"head":0.0,"behind":1,"trail":0,"aim":0.0}]}},{"name":"walk_low","loop":true,"motion":2.6,"poses":[{"crouch":42.6,"hipx":-0.6775709680740424,"lean":8.490234818230524,"ff":14.0,"bf":-15.0,"ffl":3.0,"bfl":0.0,"hx":13.432219947387551,"hy":-22.946300087687415,"ba":-22.0,"head":0.8414709848078965,"behind":0,"trail":0,"aim":0.0},{"crouch":42.2,"hipx":0.5189284469547772,"lean":9.556616036241405,"ff":17.0,"bf":-18.0,"ffl":2.598076211353316,"bfl":0.0,"hx":13.54812378708442,"hy":-22.75312702152597,"ba":-22.0,"head":-0.047180030201170606,"behind":0,"trail":0,"aim":0.0},{"crouch":41.4,"hipx":1.1964994150288197,"lean":10.56638121801088,"ff":19.196152422706632,"bf":-20.196152422706632,"ffl":1.5000000000000004,"bfl":0.0,"hx":14.115903839696868,"hy":-21.806826933838554,"ba":-22.0,"head":-0.8886510150090671,"behind":0,"trail":0,"aim":0.0},{"crouch":41.0,"hipx":0.6775709680740426,"lean":10.509765181769476,"ff":20.0,"bf":-21.0,"ffl":1.8369701987210297e-16,"bfl":0.0,"hx":14.567780052612449,"hy":-21.053699912312585,"ba":-22.0,"head":-0.8414709848078966,"behind":0,"trail":0,"aim":0.0},{"crouch":41.4,"hipx":-0.5189284469547767,"lean":9.443383963758595,"ff":19.196152422706632,"bf":-20.196152422706632,"ffl":0.0,"bfl":1.4999999999999993,"hx":14.451876212915582,"hy":-21.24687297847403,"ba":-22.0,"head":0.04718003020117026,"behind":0,"trail":0,"aim":0.0},{"crouch":42.2,"hipx":-1.1964994150288197,"lean":8.43361878198912,"ff":17.0,"bf":-18.0,"ffl":0.0,"bfl":2.598076211353316,"hx":13.884096160303132,"hy":-22.193173066161446,"ba":-22.0,"head":0.8886510150090673,"behind":0,"trail":0,"aim":0.0},{"crouch":42.6,"hipx":-0.6775709680740423,"lean":8.490234818230524,"ff":14.0,"bf":-15.0,"ffl":0.0,"bfl":3.0,"hx":13.432219947387551,"hy":-22.946300087687415,"ba":-22.0,"head":0.8414709848078966,"behind":0,"trail":0,"aim":0.0},{"crouch":42.2,"hipx":0.518928446954778,"lean":9.556616036241405,"ff":11.0,"bf":-12.0,"ffl":0.0,"bfl":2.598076211353316,"hx":13.54812378708442,"hy":-22.75312702152597,"ba":-22.0,"head":-0.04718003020117103,"behind":0,"trail":0,"aim":0.0},{"crouch":41.400000000000006,"hipx":1.1964994150288197,"lean":10.56638121801088,"ff":8.80384757729337,"bf":-9.80384757729337,"ffl":0.0,"bfl":1.5000000000000013,"hx":14.115903839696866,"hy":-21.806826933838554,"ba":-22.0,"head":-0.8886510150090668,"behind":0,"trail":0,"aim":0.0},{"crouch":41.0,"hipx":0.6775709680740424,"lean":10.509765181769476,"ff":8.0,"bf":-9.0,"ffl":0.0,"bfl":5.51091059616309e-16,"hx":14.567780052612449,"hy":-21.053699912312585,"ba":-22.0,"head":-0.8414709848078967,"behind":0,"trail":0,"aim":0.0},{"crouch":41.4,"hipx":-0.5189284469547779,"lean":9.443383963758595,"ff":8.803847577293368,"bf":-9.803847577293368,"ffl":1.5000000000000004,"bfl":0.0,"hx":14.45187621291558,"hy":-21.24687297847403,"ba":-22.0,"head":0.047180030201170904,"behind":0,"trail":0,"aim":0.0},{"crouch":42.2,"hipx":-1.1964994150288197,"lean":8.43361878198912,"ff":10.999999999999996,"bf":-11.999999999999996,"ffl":2.598076211353315,"bfl":0.0,"hx":13.884096160303134,"hy":-22.193173066161442,"ba":-22.0,"head":0.8886510150090667,"behind":0,"trail":0,"aim":0.0}]},{"name":"walk_mid","loop":true,"motion":2.6,"poses":[{"crouch":44.6,"hipx":-0.6775709680740424,"lean":5.490234818230524,"ff":13.0,"bf":-15.0,"ffl":3.0,"bfl":0.0,"hx":14.432219947387551,"hy":-13.946300087687414,"ba":14.0,"head":0.8414709848078965,"behind":0,"trail":0,"aim":0.0},{"crouch":44.2,"hipx":0.5189284469547772,"lean":6.5566160362414045,"ff":16.0,"bf":-18.0,"ffl":2.598076211353316,"bfl":0.0,"hx":14.54812378708442,"hy":-13.75312702152597,"ba":14.0,"head":-0.047180030201170606,"behind":0,"trail":0,"aim":0.0},{"crouch":43.4,"hipx":1.1964994150288197,"lean":7.56638121801088,"ff":18.196152422706632,"bf":-20.196152422706632,"ffl":1.5000000000000004,"bfl":0.0,"hx":15.115903839696868,"hy":-12.806826933838554,"ba":14.0,"head":-0.8886510150090671,"behind":0,"trail":0,"aim":0.0},{"crouch":43.0,"hipx":0.6775709680740426,"lean":7.509765181769476,"ff":19.0,"bf":-21.0,"ffl":1.8369701987210297e-16,"bfl":0.0,"hx":15.567780052612449,"hy":-12.053699912312586,"ba":14.0,"head":-0.8414709848078966,"behind":0,"trail":0,"aim":0.0},{"crouch":43.4,"hipx":-0.5189284469547767,"lean":6.4433839637585955,"ff":18.196152422706632,"bf":-20.196152422706632,"ffl":0.0,"bfl":1.4999999999999993,"hx":15.451876212915582,"hy":-12.24687297847403,"ba":14.0,"head":0.04718003020117026,"behind":0,"trail":0,"aim":0.0},{"crouch":44.2,"hipx":-1.1964994150288197,"lean":5.43361878198912,"ff":16.0,"bf":-18.0,"ffl":0.0,"bfl":2.598076211353316,"hx":14.884096160303132,"hy":-13.193173066161446,"ba":14.0,"head":0.8886510150090673,"behind":0,"trail":0,"aim":0.0},{"crouch":44.6,"hipx":-0.6775709680740423,"lean":5.490234818230524,"ff":13.0,"bf":-15.0,"ffl":0.0,"bfl":3.0,"hx":14.432219947387551,"hy":-13.946300087687414,"ba":14.0,"head":0.8414709848078966,"behind":0,"trail":0,"aim":0.0},{"crouch":44.2,"hipx":0.518928446954778,"lean":6.556616036241405,"ff":10.0,"bf":-12.0,"ffl":0.0,"bfl":2.598076211353316,"hx":14.54812378708442,"hy":-13.75312702152597,"ba":14.0,"head":-0.04718003020117103,"behind":0,"trail":0,"aim":0.0},{"crouch":43.400000000000006,"hipx":1.1964994150288197,"lean":7.56638121801088,"ff":7.80384757729337,"bf":-9.80384757729337,"ffl":0.0,"bfl":1.5000000000000013,"hx":15.115903839696866,"hy":-12.806826933838556,"ba":14.0,"head":-0.8886510150090668,"behind":0,"trail":0,"aim":0.0},{"crouch":43.0,"hipx":0.6775709680740424,"lean":7.509765181769476,"ff":7.0,"bf":-9.0,"ffl":0.0,"bfl":5.51091059616309e-16,"hx":15.567780052612449,"hy":-12.053699912312586,"ba":14.0,"head":-0.8414709848078967,"behind":0,"trail":0,"aim":0.0},{"crouch":43.4,"hipx":-0.5189284469547779,"lean":6.443383963758595,"ff":7.803847577293368,"bf":-9.803847577293368,"ffl":1.5000000000000004,"bfl":0.0,"hx":15.45187621291558,"hy":-12.24687297847403,"ba":14.0,"head":0.047180030201170904,"behind":0,"trail":0,"aim":0.0},{"crouch":44.2,"hipx":-1.1964994150288197,"lean":5.43361878198912,"ff":9.999999999999996,"bf":-11.999999999999996,"ffl":2.598076211353315,"bfl":0.0,"hx":14.884096160303134,"hy":-13.193173066161444,"ba":14.0,"head":0.8886510150090667,"behind":0,"trail":0,"aim":0.0}]},{"name":"walk_high","loop":true,"motion":2.6,"poses":[{"crouch":45.6,"hipx":-0.6775709680740424,"lean":0.4902348182305243,"ff":12.0,"bf":-15.0,"ffl":3.0,"bfl":0.0,"hx":7.432219947387551,"hy":5.053699912312585,"ba":166.0,"head":0.8414709848078965,"behind":1,"trail":0,"aim":0.0},{"crouch":45.2,"hipx":0.5189284469547772,"lean":1.5566160362414048,"ff":15.0,"bf":-18.0,"ffl":2.598076211353316,"bfl":0.0,"hx":7.5481237870844184,"hy":5.2468729784740304,"ba":166.0,"head":-0.047180030201170606,"behind":1,"trail":0,"aim":0.0},{"crouch":44.4,"hipx":1.1964994150288197,"lean":2.5663812180108803,"ff":17.196152422706632,"bf":-20.196152422706632,"ffl":1.5000000000000004,"bfl":0.0,"hx":8.115903839696868,"hy":6.193173066161445,"ba":166.0,"head":-0.8886510150090671,"behind":1,"trail":0,"aim":0.0},{"crouch":44.0,"hipx":0.6775709680740426,"lean":2.5097651817694757,"ff":18.0,"bf":-21.0,"ffl":1.8369701987210297e-16,"bfl":0.0,"hx":8.567780052612449,"hy":6.946300087687415,"ba":166.0,"head":-0.8414709848078966,"behind":1,"trail":0,"aim":0.0},{"crouch":44.4,"hipx":-0.5189284469547767,"lean":1.4433839637585957,"ff":17.196152422706632,"bf":-20.196152422706632,"ffl":0.0,"bfl":1.4999999999999993,"hx":8.451876212915582,"hy":6.7531270215259696,"ba":166.0,"head":0.04718003020117026,"behind":1,"trail":0,"aim":0.0},{"crouch":45.2,"hipx":-1.1964994150288197,"lean":0.4336187819891193,"ff":15.0,"bf":-18.0,"ffl":0.0,"bfl":2.598076211353316,"hx":7.884096160303133,"hy":5.806826933838554,"ba":166.0,"head":0.8886510150090673,"behind":1,"trail":0,"aim":0.0},{"crouch":45.6,"hipx":-0.6775709680740423,"lean":0.49023481823052406,"ff":12.0,"bf":-15.0,"ffl":0.0,"bfl":3.0,"hx":7.432219947387551,"hy":5.053699912312585,"ba":166.0,"head":0.8414709848078966,"behind":1,"trail":0,"aim":0.0},{"crouch":45.2,"hipx":0.518928446954778,"lean":1.5566160362414052,"ff":9.0,"bf":-12.0,"ffl":0.0,"bfl":2.598076211353316,"hx":7.5481237870844184,"hy":5.2468729784740304,"ba":166.0,"head":-0.04718003020117103,"behind":1,"trail":0,"aim":0.0},{"crouch":44.400000000000006,"hipx":1.1964994150288197,"lean":2.5663812180108803,"ff":6.80384757729337,"bf":-9.80384757729337,"ffl":0.0,"bfl":1.5000000000000013,"hx":8.115903839696866,"hy":6.193173066161444,"ba":166.0,"head":-0.8886510150090668,"behind":1,"trail":0,"aim":0.0},{"crouch":44.0,"hipx":0.6775709680740424,"lean":2.5097651817694757,"ff":6.0,"bf":-9.0,"ffl":0.0,"bfl":5.51091059616309e-16,"hx":8.567780052612449,"hy":6.946300087687415,"ba":166.0,"head":-0.8414709848078967,"behind":1,"trail":0,"aim":0.0},{"crouch":44.4,"hipx":-0.5189284469547779,"lean":1.443383963758595,"ff":6.803847577293368,"bf":-9.803847577293368,"ffl":1.5000000000000004,"bfl":0.0,"hx":8.45187621291558,"hy":6.7531270215259696,"ba":166.0,"head":0.047180030201170904,"behind":1,"trail":0,"aim":0.0},{"crouch":45.2,"hipx":-1.1964994150288197,"lean":0.43361878198911996,"ff":8.999999999999996,"bf":-11.999999999999996,"ffl":2.598076211353315,"bfl":0.0,"hx":7.884096160303134,"hy":5.806826933838556,"ba":166.0,"head":0.8886510150090667,"behind":1,"trail":0,"aim":0.0}]},{"name":"guard_low","loop":false,"motion":0.0,"poses":[{"crouch":43.0,"hipx":0.0,"lean":8.0,"ff":14.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":13.568,"hy":-21.568,"ba":-30.64,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":41.8,"hipx":0.0,"lean":7.04,"ff":14.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":12.704,"hy":-20.704,"ba":-47.92,"head":0.72,"behind":0,"trail":0,"aim":0.0},{"crouch":41.0,"hipx":0.0,"lean":6.4,"ff":14.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":12.121500000000001,"hy":-20.1215,"ba":-59.56999999999999,"head":1.2,"behind":0,"trail":0,"aim":0.0},{"crouch":41.6,"hipx":0.0,"lean":6.88,"ff":14.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":12.0,"hy":-20.0,"ba":-62.0,"head":0.84,"behind":0,"trail":0,"aim":0.0}]},{"name":"guard_mid","loop":false,"motion":0.0,"poses":[{"crouch":45.0,"hipx":0.0,"lean":5.0,"ff":13.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":14.352,"hy":-12.784,"ba":22.856,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":43.8,"hipx":0.0,"lean":4.04,"ff":13.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":13.056000000000001,"hy":-12.352,"ba":40.568,"head":0.72,"behind":0,"trail":0,"aim":0.0},{"crouch":43.0,"hipx":0.0,"lean":3.4,"ff":13.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":12.18225,"hy":-12.06075,"ba":52.509249999999994,"head":1.2,"behind":0,"trail":0,"aim":0.0},{"crouch":43.6,"hipx":0.0,"lean":3.88,"ff":13.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":12.0,"hy":-12.0,"ba":55.0,"head":0.84,"behind":0,"trail":0,"aim":0.0}]},{"name":"guard_high","loop":false,"motion":0.0,"poses":[{"crouch":46.0,"hipx":0.0,"lean":0.0,"ff":12.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":8.216,"hy":6.432,"ba":131.872,"head":0.0,"behind":1,"trail":0,"aim":0.0},{"crouch":44.8,"hipx":0.0,"lean":-0.96,"ff":12.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":8.648,"hy":7.296,"ba":63.616,"head":0.72,"behind":0,"trail":0,"aim":0.0},{"crouch":44.0,"hipx":0.0,"lean":-1.6,"ff":12.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":8.93925,"hy":7.8785,"ba":17.5985,"head":1.2,"behind":0,"trail":0,"aim":0.0},{"crouch":44.6,"hipx":0.0,"lean":-1.1199999999999999,"ff":12.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":9.0,"hy":8.0,"ba":8.0,"head":0.84,"behind":0,"trail":0,"aim":0.0}]},{"name":"trans_lm","loop":false,"motion":0.0,"poses":[{"crouch":43.509652,"hipx":0.0,"lean":7.235522,"ff":13.745174,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":14.254826,"hy":-19.706566,"ba":-12.826264,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":44.463616,"hipx":0.0,"lean":5.804576,"ff":13.268191999999999,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":14.731808000000001,"hy":-15.413727999999999,"ba":4.3450880000000005,"head":0.0,"behind":0,"trail":0,"aim":0.0}]},{"name":"trans_mh","loop":false,"motion":0.0,"poses":[{"crouch":45.254826,"hipx":0.0,"lean":3.72587,"ff":12.745174,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":13.216218,"hy":-8.158306,"ba":52.733552,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":45.731808,"hipx":0.0,"lean":1.34096,"ff":12.268191999999999,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":9.877344,"hy":0.9043519999999994,"ba":125.234816,"head":0.0,"behind":1,"trail":0,"aim":0.0}]},{"name":"trans_lh","loop":false,"motion":0.0,"poses":[{"crouch":43.764478,"hipx":0.0,"lean":5.961392,"ff":13.490348000000001,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":12.471044,"hy":-14.864872,"ba":25.907288,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":45.195424,"hipx":0.0,"lean":2.145536,"ff":12.536384,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":9.609152,"hy":-1.5093759999999996,"ba":115.579904,"head":0.0,"behind":1,"trail":0,"aim":0.0}]},{"name":"strike_low","loop":false,"motion":0.0,"poses":[{"crouch":43.0,"hipx":0.0,"lean":7.584,"ff":14.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":12.751999999999999,"hy":-21.792,"ba":-36.352000000000004,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":42.7,"hipx":-0.24999999999999997,"lean":5.992,"ff":14.0,"bf":-15.2,"ffl":0.0,"bfl":0.0,"hx":9.776,"hy":-21.296,"ba":-70.57600000000002,"head":0.3,"behind":0,"trail":0,"aim":0.0},{"crouch":42.4,"hipx":-0.49999999999999994,"lean":4.207999999999999,"ff":14.0,"bf":-15.4,"ffl":0.0,"bfl":0.0,"hx":6.224,"hy":-20.704,"ba":-111.424,"head":0.6,"behind":1,"trail":0,"aim":0.0},{"crouch":42.1,"hipx":-0.75,"lean":2.825,"ff":14.0,"bf":-15.6,"ffl":0.0,"bfl":0.0,"hx":3.875,"hy":-20.3125,"ba":-138.4375,"head":0.8999999999999999,"behind":1,"trail":0,"aim":0.0},{"crouch":41.8,"hipx":-0.9999999999999999,"lean":1.7120000000000002,"ff":14.0,"bf":-15.8,"ffl":0.0,"bfl":0.0,"hx":2.3360000000000003,"hy":-20.056,"ba":-156.136,"head":1.2,"behind":1,"trail":0,"aim":0.0},{"crouch":41.5,"hipx":-1.25,"lean":1.0,"ff":14.0,"bf":-16.0,"ffl":0.0,"bfl":0.0,"hx":2.0,"hy":-20.0,"ba":-160.0,"head":1.5,"behind":1,"trail":0,"aim":0.0},{"crouch":39.7,"hipx":0.0,"lean":4.4,"ff":15.5,"bf":-16.2,"ffl":0.0,"bfl":0.0,"hx":6.0,"hy":-22.0,"ba":-135.0,"head":1.7999999999999998,"behind":1,"trail":0,"aim":0.0},{"crouch":37.9,"hipx":1.25,"lean":7.800000000000001,"ff":17.0,"bf":-16.4,"ffl":0.0,"bfl":0.0,"hx":10.0,"hy":-24.0,"ba":-110.0,"head":2.0999999999999996,"behind":1,"trail":0,"aim":0.0},{"crouch":37.54166666666667,"hipx":4.15,"lean":12.716666666666667,"ff":19.466666666666665,"bf":-15.0,"ffl":0.0,"bfl":0.175,"hx":15.0,"hy":-25.0,"ba":-80.0,"head":0.5833333333333333,"behind":0,"trail":1,"aim":0.0},{"crouch":37.18333333333333,"hipx":7.05,"lean":17.633333333333333,"ff":21.933333333333334,"bf":-13.6,"ffl":0.0,"bfl":0.35,"hx":20.0,"hy":-26.0,"ba":-50.0,"head":-0.9333333333333332,"behind":0,"trail":1,"aim":0.0},{"crouch":36.275,"hipx":8.575,"lean":19.45,"ff":23.4,"bf":-12.9,"ffl":0.0,"bfl":0.5249999999999999,"hx":23.0,"hy":-26.0,"ba":-29.0,"head":-1.4,"behind":0,"trail":1,"aim":0.0},{"crouch":35.36666666666667,"hipx":10.1,"lean":21.266666666666666,"ff":24.866666666666667,"bf":-12.2,"ffl":0.0,"bfl":0.7,"hx":26.0,"hy":-26.0,"ba":-8.0,"head":-1.8666666666666665,"behind":0,"trail":1,"aim":0.0},{"crouch":35.458333333333336,"hipx":10.625,"lean":21.083333333333336,"ff":25.333333333333332,"bf":-11.5,"ffl":0.0,"bfl":0.875,"hx":25.0,"hy":-23.0,"ba":2.0,"head":-2.3333333333333335,"behind":0,"trail":1,"aim":0.0},{"crouch":35.55,"hipx":11.15,"lean":20.9,"ff":25.8,"bf":-10.8,"ffl":0.0,"bfl":1.0499999999999998,"hx":24.0,"hy":-20.0,"ba":12.0,"head":-2.8,"behind":0,"trail":1,"aim":0.0},{"crouch":36.458333333333336,"hipx":10.125,"lean":19.083333333333336,"ff":24.833333333333332,"bf":-11.5,"ffl":0.0,"bfl":0.875,"hx":22.5,"hy":-19.5,"ba":10.0,"head":-2.3333333333333335,"behind":0,"trail":0,"aim":0.0},{"crouch":37.36666666666667,"hipx":9.1,"lean":17.266666666666666,"ff":23.866666666666667,"bf":-12.2,"ffl":0.0,"bfl":0.7,"hx":21.0,"hy":-19.0,"ba":8.0,"head":-1.8666666666666665,"behind":0,"trail":0,"aim":0.0},{"crouch":38.018,"hipx":8.14975,"lean":16.0855,"ff":22.913999999999998,"bf":-12.9,"ffl":0.0,"bfl":0.5249999999999999,"hx":20.57475,"hy":-19.18225,"ba":6.1775,"head":-1.4,"behind":0,"trail":0,"aim":0.0},{"crouch":39.04733333333333,"hipx":6.537999999999999,"lean":14.337333333333333,"ff":21.205333333333332,"bf":-13.6,"ffl":0.0,"bfl":0.35,"hx":19.488,"hy":-19.648,"ba":1.5200000000000005,"head":-0.9333333333333332,"behind":0,"trail":0,"aim":0.0},{"crouch":40.29266666666667,"hipx":4.5482499999999995,"lean":12.265166666666666,"ff":19.064666666666664,"bf":-14.3,"ffl":0.0,"bfl":0.175,"hx":18.02325,"hy":-20.27575,"ba":-4.757500000000002,"head":-0.4666666666666666,"behind":0,"trail":0,"aim":0.0},{"crouch":41.592,"hipx":2.4639999999999995,"lean":10.112,"ff":16.816,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":16.464,"hy":-20.944,"ba":-11.440000000000001,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":42.375,"hipx":1.09375,"lean":8.9375,"ff":15.25,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":15.09375,"hy":-21.53125,"ba":-17.3125,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":42.888,"hipx":0.19599999999999973,"lean":8.168,"ff":14.224,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":14.196,"hy":-21.916,"ba":-21.16,"head":0.0,"behind":0,"trail":0,"aim":0.0}],"by":{"morsel":[{"crouch":43.0,"hipx":0.0,"lean":8.0,"ff":14.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":12.959999999999999,"hy":-20.96,"ba":-21.792,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":43.0,"hipx":0.0,"lean":8.0,"ff":14.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":10.479999999999999,"hy":-18.48,"ba":-21.296,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":43.0,"hipx":0.0,"lean":8.0,"ff":14.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":7.52,"hy":-15.52,"ba":-20.704,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":43.0,"hipx":0.0,"lean":8.0,"ff":14.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":5.5625,"hy":-13.5625,"ba":-20.3125,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":43.0,"hipx":0.0,"lean":8.0,"ff":14.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":4.280000000000001,"hy":-12.280000000000001,"ba":-20.056,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":43.0,"hipx":0.0,"lean":8.0,"ff":14.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":4.0,"hy":-12.0,"ba":-20.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":42.5,"hipx":0.0,"lean":8.0,"ff":14.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":2.5,"hy":-12.0,"ba":-19.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":42.0,"hipx":0.0,"lean":8.0,"ff":14.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":1.0,"hy":-12.0,"ba":-18.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":40.5,"hipx":1.5,"lean":10.0,"ff":17.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":9.5,"hy":-14.0,"ba":-20.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":39.0,"hipx":3.0,"lean":12.0,"ff":20.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":18.0,"hy":-16.0,"ba":-22.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":37.0,"hipx":5.0,"lean":16.0,"ff":23.5,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":24.0,"hy":-17.0,"ba":-23.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":35.0,"hipx":7.0,"lean":20.0,"ff":27.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":30.0,"hy":-18.0,"ba":-24.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":35.0,"hipx":7.0,"lean":20.0,"ff":27.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":29.5,"hy":-18.0,"ba":-24.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":35.0,"hipx":7.0,"lean":20.0,"ff":27.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":29.0,"hy":-18.0,"ba":-24.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":37.0,"hipx":5.0,"lean":16.0,"ff":23.5,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":23.5,"hy":-16.5,"ba":-22.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":39.0,"hipx":3.0,"lean":12.0,"ff":20.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":18.0,"hy":-15.0,"ba":-20.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":39.243,"hipx":2.81775,"lean":11.757,"ff":19.6355,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":17.757,"hy":-15.42525,"ba":-20.1215,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":39.864,"hipx":2.352,"lean":11.136,"ff":18.704,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":17.136,"hy":-16.512,"ba":-20.432,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":40.701,"hipx":1.7242499999999998,"lean":10.299,"ff":17.4485,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":16.299,"hy":-17.97675,"ba":-20.8505,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":41.592,"hipx":1.056,"lean":9.408,"ff":16.112000000000002,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":15.408,"hy":-19.536,"ba":-21.296,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":42.375,"hipx":0.46875,"lean":8.625,"ff":14.9375,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":14.625,"hy":-20.90625,"ba":-21.6875,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":42.888,"hipx":0.08400000000000007,"lean":8.112,"ff":14.168,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":14.112,"hy":-21.804000000000002,"ba":-21.944,"head":0.0,"behind":0,"trail":0,"aim":0.0}]}},{"name":"strike_mid","loop":false,"motion":0.0,"poses":[{"crouch":45.0,"hipx":0.0,"lean":4.272,"ff":13.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":14.064,"hy":-11.232,"ba":27.104000000000003,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":44.65714285714286,"hipx":-0.2857142857142857,"lean":1.8502857142857139,"ff":13.0,"bf":-15.228571428571428,"ffl":0.0,"bfl":0.0,"hx":11.831999999999999,"hy":-7.015999999999998,"ba":58.35200000000001,"head":0.34285714285714286,"behind":0,"trail":0,"aim":0.0},{"crouch":44.31428571428572,"hipx":-0.5714285714285714,"lean":-0.9074285714285719,"ff":13.0,"bf":-15.457142857142857,"ffl":0.0,"bfl":0.0,"hx":9.168,"hy":-1.984,"ba":95.648,"head":0.6857142857142857,"behind":1,"trail":0,"aim":0.0},{"crouch":43.971428571428575,"hipx":-0.8571428571428572,"lean":-2.963392857142857,"ff":13.0,"bf":-15.685714285714285,"ffl":0.0,"bfl":0.0,"hx":7.40625,"hy":1.34375,"ba":120.3125,"head":1.0285714285714285,"behind":1,"trail":0,"aim":0.0},{"crouch":43.628571428571426,"hipx":-1.1428571428571428,"lean":-4.546857142857143,"ff":13.0,"bf":-15.914285714285715,"ffl":0.0,"bfl":0.0,"hx":6.252000000000001,"hy":3.524000000000001,"ba":136.47199999999998,"head":1.3714285714285714,"behind":1,"trail":0,"aim":0.0},{"crouch":43.285714285714285,"hipx":-1.4285714285714288,"lean":-5.428571428571429,"ff":13.0,"bf":-16.142857142857142,"ffl":0.0,"bfl":0.0,"hx":6.0,"hy":4.0,"ba":140.0,"head":1.7142857142857144,"behind":1,"trail":0,"aim":0.0},{"crouch":42.94285714285714,"hipx":-0.2142857142857144,"lean":-2.614285714285714,"ff":15.0,"bf":-16.37142857142857,"ffl":0.0,"bfl":0.0,"hx":10.0,"hy":3.0,"ba":120.0,"head":2.057142857142857,"behind":1,"trail":0,"aim":0.0},{"crouch":42.6,"hipx":1.0,"lean":0.1999999999999993,"ff":17.0,"bf":-16.6,"ffl":0.0,"bfl":0.0,"hx":14.0,"hy":2.0,"ba":100.0,"head":2.4000000000000004,"behind":1,"trail":0,"aim":0.0},{"crouch":43.33333333333333,"hipx":4.1,"lean":6.033333333333333,"ff":19.533333333333335,"bf":-15.0,"ffl":0.0,"bfl":0.2,"hx":19.0,"hy":-2.0,"ba":70.0,"head":0.6666666666666669,"behind":0,"trail":1,"aim":0.0},{"crouch":44.06666666666667,"hipx":7.2,"lean":11.866666666666667,"ff":22.066666666666666,"bf":-13.4,"ffl":0.0,"bfl":0.4,"hx":24.0,"hy":-6.0,"ba":40.0,"head":-1.0666666666666667,"behind":0,"trail":1,"aim":0.0},{"crouch":41.6,"hipx":8.8,"lean":15.8,"ff":23.6,"bf":-12.6,"ffl":0.0,"bfl":0.6000000000000001,"hx":27.0,"hy":-10.0,"ba":15.0,"head":-1.6,"behind":0,"trail":1,"aim":0.0},{"crouch":39.13333333333333,"hipx":10.4,"lean":19.733333333333334,"ff":25.133333333333333,"bf":-11.8,"ffl":0.0,"bfl":0.8,"hx":30.0,"hy":-14.0,"ba":-10.0,"head":-2.1333333333333333,"behind":0,"trail":1,"aim":0.0},{"crouch":38.666666666666664,"hipx":11.0,"lean":20.666666666666668,"ff":25.666666666666668,"bf":-11.0,"ffl":0.0,"bfl":1.0,"hx":28.0,"hy":-18.0,"ba":-27.5,"head":-2.666666666666667,"behind":0,"trail":1,"aim":0.0},{"crouch":38.2,"hipx":11.6,"lean":21.6,"ff":26.2,"bf":-10.2,"ffl":0.0,"bfl":1.2000000000000002,"hx":26.0,"hy":-22.0,"ba":-45.0,"head":-3.2,"behind":0,"trail":1,"aim":0.0},{"crouch":39.166666666666664,"hipx":10.5,"lean":19.166666666666668,"ff":25.166666666666668,"bf":-11.0,"ffl":0.0,"bfl":1.0,"hx":23.5,"hy":-23.0,"ba":-51.5,"head":-2.666666666666667,"behind":0,"trail":0,"aim":0.0},{"crouch":40.13333333333333,"hipx":9.4,"lean":16.733333333333334,"ff":24.133333333333333,"bf":-11.8,"ffl":0.0,"bfl":0.8,"hx":21.0,"hy":-24.0,"ba":-58.0,"head":-2.1333333333333333,"behind":0,"trail":0,"aim":0.0},{"crouch":40.782250000000005,"hipx":8.37475,"lean":15.314,"ff":23.053250000000002,"bf":-12.6,"ffl":0.0,"bfl":0.6000000000000001,"hx":20.6355,"hy":-23.33175,"ba":-53.626,"head":-1.6,"behind":0,"trail":0,"aim":0.0},{"crouch":41.71466666666667,"hipx":6.688,"lean":13.138666666666667,"ff":21.122666666666667,"bf":-13.4,"ffl":0.0,"bfl":0.4,"hx":19.704,"hy":-21.624,"ba":-42.448,"head":-1.0666666666666667,"behind":0,"trail":0,"aim":0.0},{"crouch":42.809083333333334,"hipx":4.623249999999999,"lean":10.531333333333333,"ff":18.706083333333336,"bf":-14.2,"ffl":0.0,"bfl":0.2,"hx":18.4485,"hy":-19.32225,"ba":-27.381999999999994,"head":-0.5333333333333333,"behind":0,"trail":0,"aim":0.0},{"crouch":43.944,"hipx":2.4639999999999995,"lean":7.816,"ff":16.168,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":17.112000000000002,"hy":-16.872,"ba":-11.344000000000001,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":44.53125,"hipx":1.09375,"lean":6.25,"ff":14.40625,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":15.9375,"hy":-14.71875,"ba":2.75,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":44.916,"hipx":0.19599999999999973,"lean":5.224,"ff":13.252,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":15.168,"hy":-13.308,"ba":11.983999999999995,"head":0.0,"behind":0,"trail":0,"aim":0.0}],"by":{"morsel":[{"crouch":45.0,"hipx":0.0,"lean":5.0,"ff":13.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":13.751999999999999,"hy":-12.272,"ba":12.751999999999999,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":45.0,"hipx":0.0,"lean":5.0,"ff":13.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":10.776,"hy":-10.536,"ba":9.776,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":45.0,"hipx":0.0,"lean":5.0,"ff":13.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":7.224,"hy":-8.463999999999999,"ba":6.224,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":45.0,"hipx":0.0,"lean":5.0,"ff":13.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":4.875,"hy":-7.09375,"ba":3.875,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":45.0,"hipx":0.0,"lean":5.0,"ff":13.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":3.3360000000000003,"hy":-6.196,"ba":2.3360000000000003,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":45.0,"hipx":0.0,"lean":5.0,"ff":13.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":3.0,"hy":-6.0,"ba":2.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":44.0,"hipx":0.0,"lean":5.0,"ff":13.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":1.5,"hy":-5.5,"ba":2.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":43.0,"hipx":0.0,"lean":5.0,"ff":13.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":0.0,"hy":-5.0,"ba":2.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":41.5,"hipx":1.5,"lean":8.5,"ff":16.5,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":8.5,"hy":-6.0,"ba":1.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":40.0,"hipx":3.0,"lean":12.0,"ff":20.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":17.0,"hy":-7.0,"ba":0.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":38.0,"hipx":5.0,"lean":16.0,"ff":24.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":24.0,"hy":-7.5,"ba":-1.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":36.0,"hipx":7.0,"lean":20.0,"ff":28.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":31.0,"hy":-8.0,"ba":-2.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":36.0,"hipx":7.0,"lean":20.0,"ff":28.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":30.5,"hy":-8.0,"ba":-2.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":36.0,"hipx":7.0,"lean":20.0,"ff":28.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":30.0,"hy":-8.0,"ba":-2.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":38.0,"hipx":5.0,"lean":16.0,"ff":24.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":23.5,"hy":-7.5,"ba":-1.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":40.0,"hipx":3.0,"lean":12.0,"ff":20.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":17.0,"hy":-7.0,"ba":0.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":40.30375,"hipx":2.81775,"lean":11.57475,"ff":19.57475,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":16.8785,"hy":-7.3645,"ba":0.8505,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":41.08,"hipx":2.352,"lean":10.488,"ff":18.488,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":16.568,"hy":-8.296,"ba":3.024,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":42.12625,"hipx":1.7242499999999998,"lean":9.023249999999999,"ff":17.02325,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":16.1495,"hy":-9.5515,"ba":5.953500000000001,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":43.24,"hipx":1.056,"lean":7.4639999999999995,"ff":15.463999999999999,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":15.704,"hy":-10.888,"ba":9.072000000000001,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":44.21875,"hipx":0.46875,"lean":6.09375,"ff":14.09375,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":15.3125,"hy":-12.0625,"ba":11.8125,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":44.86,"hipx":0.08400000000000007,"lean":5.196,"ff":13.196,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":15.056000000000001,"hy":-12.832,"ba":13.608,"head":0.0,"behind":0,"trail":0,"aim":0.0}]}},{"name":"strike_high","loop":false,"motion":0.0,"poses":[{"crouch":46.104,"hipx":0.0,"lean":-0.4160000000000001,"ff":12.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":7.584,"hy":6.312,"ba":167.248,"head":0.0,"behind":1,"trail":0,"aim":0.0},{"crouch":45.923428571428566,"hipx":-0.3571428571428571,"lean":-2.2651428571428576,"ff":12.0,"bf":-15.285714285714286,"ffl":0.0,"bfl":0.0,"hx":6.592,"hy":7.056,"ba":170.224,"head":0.42857142857142855,"behind":1,"trail":0,"aim":0.0},{"crouch":45.79085714285715,"hipx":-0.7142857142857142,"lean":-4.306285714285714,"ff":12.0,"bf":-15.571428571428571,"ffl":0.0,"bfl":0.0,"hx":5.4079999999999995,"hy":7.944,"ba":173.776,"head":0.8571428571428571,"behind":1,"trail":0,"aim":0.0},{"crouch":45.558035714285715,"hipx":-1.0714285714285714,"lean":-5.946428571428571,"ff":12.0,"bf":-15.857142857142858,"ffl":0.0,"bfl":0.0,"hx":4.625,"hy":8.53125,"ba":176.125,"head":1.2857142857142856,"behind":1,"trail":0,"aim":0.0},{"crouch":45.257714285714286,"hipx":-1.4285714285714284,"lean":-7.316571428571429,"ff":12.0,"bf":-16.142857142857142,"ffl":0.0,"bfl":0.0,"hx":4.112,"hy":8.916,"ba":177.664,"head":1.7142857142857142,"behind":1,"trail":0,"aim":0.0},{"crouch":44.857142857142854,"hipx":-1.7857142857142858,"lean":-8.285714285714285,"ff":12.0,"bf":-16.428571428571427,"ffl":0.0,"bfl":0.0,"hx":4.0,"hy":9.0,"ba":178.0,"head":2.142857142857143,"behind":1,"trail":0,"aim":0.0},{"crouch":43.92857142857143,"hipx":-0.6428571428571428,"lean":-6.142857142857142,"ff":15.0,"bf":-16.714285714285715,"ffl":0.0,"bfl":0.0,"hx":8.0,"hy":9.5,"ba":149.0,"head":2.571428571428571,"behind":1,"trail":0,"aim":0.0},{"crouch":43.0,"hipx":0.5,"lean":-4.0,"ff":18.0,"bf":-17.0,"ffl":0.0,"bfl":0.0,"hx":12.0,"hy":10.0,"ba":120.0,"head":3.0,"behind":1,"trail":0,"aim":0.0},{"crouch":43.916666666666664,"hipx":4.0,"lean":3.1666666666666665,"ff":20.666666666666668,"bf":-15.0,"ffl":0.0,"bfl":0.25,"hx":17.0,"hy":7.0,"ba":90.0,"head":0.8333333333333334,"behind":0,"trail":1,"aim":0.0},{"crouch":44.833333333333336,"hipx":7.5,"lean":10.333333333333332,"ff":23.333333333333332,"bf":-13.0,"ffl":0.0,"bfl":0.5,"hx":22.0,"hy":4.0,"ba":60.0,"head":-1.3333333333333333,"behind":0,"trail":1,"aim":0.0},{"crouch":42.25,"hipx":9.25,"lean":14.5,"ff":25.0,"bf":-12.0,"ffl":0.0,"bfl":0.75,"hx":25.0,"hy":0.0,"ba":32.0,"head":-2.0,"behind":0,"trail":1,"aim":0.0},{"crouch":39.666666666666664,"hipx":11.0,"lean":18.666666666666664,"ff":26.666666666666668,"bf":-11.0,"ffl":0.0,"bfl":1.0,"hx":28.0,"hy":-4.0,"ba":4.0,"head":-2.6666666666666665,"behind":0,"trail":1,"aim":0.0},{"crouch":39.083333333333336,"hipx":11.75,"lean":20.833333333333336,"ff":27.333333333333332,"bf":-10.0,"ffl":0.0,"bfl":1.25,"hx":27.0,"hy":-9.0,"ba":-8.0,"head":-3.3333333333333335,"behind":0,"trail":1,"aim":0.0},{"crouch":38.5,"hipx":12.5,"lean":23.0,"ff":28.0,"bf":-9.0,"ffl":0.0,"bfl":1.5,"hx":26.0,"hy":-14.0,"ba":-20.0,"head":-4.0,"behind":0,"trail":1,"aim":0.0},{"crouch":39.583333333333336,"hipx":11.25,"lean":19.833333333333336,"ff":26.833333333333332,"bf":-10.0,"ffl":0.0,"bfl":1.25,"hx":24.0,"hy":-15.5,"ba":-25.0,"head":-3.3333333333333335,"behind":0,"trail":0,"aim":0.0},{"crouch":40.666666666666664,"hipx":10.0,"lean":16.666666666666664,"ff":25.666666666666668,"bf":-11.0,"ffl":0.0,"bfl":1.0,"hx":22.0,"hy":-17.0,"ba":-30.0,"head":-2.6666666666666665,"behind":0,"trail":0,"aim":0.0},{"crouch":41.43225,"hipx":8.82475,"lean":14.771,"ff":24.33175,"bf":-12.0,"ffl":0.0,"bfl":0.75,"hx":21.1495,"hy":-15.60275,"ba":-18.093,"head":-2.0,"behind":0,"trail":0,"aim":0.0},{"crouch":42.48133333333334,"hipx":6.9879999999999995,"lean":11.741333333333333,"ff":21.95733333333333,"bf":-13.0,"ffl":0.0,"bfl":0.5,"hx":18.976,"hy":-12.032,"ba":12.335999999999999,"head":-1.3333333333333333,"behind":0,"trail":0,"aim":0.0},{"crouch":43.69241666666667,"hipx":4.773249999999999,"lean":8.063666666666666,"ff":18.988916666666668,"bf":-14.0,"ffl":0.0,"bfl":0.25,"hx":16.046499999999998,"hy":-7.219249999999999,"ba":53.34900000000002,"head":-0.6666666666666666,"behind":0,"trail":0,"aim":0.0},{"crouch":44.944,"hipx":2.4639999999999995,"lean":4.224,"ff":15.872,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":12.927999999999999,"hy":-2.096,"ba":97.00800000000001,"head":0.0,"behind":1,"trail":0,"aim":0.0},{"crouch":45.53125,"hipx":1.09375,"lean":1.875,"ff":13.71875,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":10.1875,"hy":2.40625,"ba":135.375,"head":0.0,"behind":1,"trail":0,"aim":0.0},{"crouch":45.916,"hipx":0.19599999999999973,"lean":0.3360000000000003,"ff":12.308,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":8.392,"hy":5.355999999999998,"ba":160.512,"head":0.0,"behind":1,"trail":0,"aim":0.0}],"by":{"morsel":[{"crouch":46.0,"hipx":0.0,"lean":0.0,"ff":12.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":7.584,"hy":5.584,"ba":150.192,"head":0.0,"behind":1,"trail":0,"aim":0.0},{"crouch":46.0,"hipx":0.0,"lean":0.0,"ff":12.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":6.592,"hy":4.592,"ba":112.49599999999998,"head":0.0,"behind":1,"trail":0,"aim":0.0},{"crouch":46.0,"hipx":0.0,"lean":0.0,"ff":12.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":5.4079999999999995,"hy":3.408,"ba":67.50399999999999,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":46.0,"hipx":0.0,"lean":0.0,"ff":12.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":4.625,"hy":2.625,"ba":37.75,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":46.0,"hipx":0.0,"lean":0.0,"ff":12.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":4.112,"hy":2.112,"ba":18.256,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":46.0,"hipx":0.0,"lean":0.0,"ff":12.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":4.0,"hy":2.0,"ba":14.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":45.0,"hipx":0.0,"lean":0.0,"ff":12.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":2.5,"hy":2.5,"ba":14.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":44.0,"hipx":0.0,"lean":0.0,"ff":12.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":1.0,"hy":3.0,"ba":14.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":42.5,"hipx":1.5,"lean":5.0,"ff":16.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":9.0,"hy":3.0,"ba":12.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":41.0,"hipx":3.0,"lean":10.0,"ff":20.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":17.0,"hy":3.0,"ba":10.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":39.0,"hipx":5.0,"lean":14.0,"ff":23.5,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":23.5,"hy":3.0,"ba":9.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":37.0,"hipx":7.0,"lean":18.0,"ff":27.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":30.0,"hy":3.0,"ba":8.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":37.0,"hipx":7.0,"lean":18.0,"ff":27.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":29.5,"hy":3.0,"ba":8.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":37.0,"hipx":7.0,"lean":18.0,"ff":27.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":29.0,"hy":3.0,"ba":8.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":39.0,"hipx":5.0,"lean":14.0,"ff":23.5,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":23.0,"hy":3.0,"ba":9.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":41.0,"hipx":3.0,"lean":10.0,"ff":20.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":17.0,"hy":3.0,"ba":10.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":41.30375,"hipx":2.81775,"lean":9.3925,"ff":19.514,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":16.45325,"hy":3.18225,"ba":19.477,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":42.08,"hipx":2.352,"lean":7.84,"ff":18.272,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":15.056000000000001,"hy":3.648,"ba":43.696,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":43.12625,"hipx":1.7242499999999998,"lean":5.7475,"ff":16.598,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":13.172749999999999,"hy":4.27575,"ba":76.33900000000001,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":44.24,"hipx":1.056,"lean":3.5199999999999996,"ff":14.815999999999999,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":11.168,"hy":4.944,"ba":111.08800000000001,"head":0.0,"behind":1,"trail":0,"aim":0.0},{"crouch":45.21875,"hipx":0.46875,"lean":1.5625,"ff":13.25,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":9.40625,"hy":5.53125,"ba":141.625,"head":0.0,"behind":1,"trail":0,"aim":0.0},{"crouch":45.86,"hipx":0.08400000000000007,"lean":0.28000000000000114,"ff":12.224,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":8.252,"hy":5.916,"ba":161.632,"head":0.0,"behind":1,"trail":0,"aim":0.0}]}},{"name":"stagger","loop":false,"motion":0.0,"poses":[{"crouch":45.25,"hipx":-1.5,"lean":0.25,"ff":11.75,"bf":-16.25,"ffl":0.0,"bfl":0.0,"hx":10.75,"hy":-6.75,"ba":48.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":44.632232521764884,"hipx":-3.0,"lean":-5.367767478235116,"ff":10.5,"bf":-19.235534956470232,"ffl":0.0,"bfl":0.0,"hx":6.5,"hy":-0.5,"ba":82.0,"head":0.0,"behind":1,"trail":0,"aim":0.0},{"crouch":44.18633703506394,"hipx":-4.5,"lean":-10.813662964936059,"ff":9.25,"bf":-21.877325929872118,"ffl":0.0,"bfl":0.0,"hx":2.25,"hy":5.75,"ba":116.0,"head":0.0,"behind":1,"trail":0,"aim":0.0},{"crouch":44.050144175636355,"hipx":-6.0,"lean":-15.949855824363647,"ff":8.0,"bf":-23.899711648727294,"ffl":0.0,"bfl":0.0,"hx":-2.0,"hy":12.0,"ba":150.0,"head":0.0,"behind":1,"trail":0,"aim":0.0},{"crouch":43.85014417563635,"hipx":-4.800000000000001,"lean":-12.149855824363648,"ff":9.0,"bf":-22.899711648727294,"ffl":0.0,"bfl":0.0,"hx":1.3999999999999986,"hy":7.0,"ba":122.80000000000001,"head":0.0,"behind":1,"trail":0,"aim":0.0},{"crouch":44.036337035063944,"hipx":-3.5999999999999996,"lean":-7.96366296493606,"ff":10.0,"bf":-21.12732592987212,"ffl":0.0,"bfl":0.0,"hx":4.800000000000001,"hy":2.0,"ba":95.6,"head":0.0,"behind":1,"trail":0,"aim":0.0},{"crouch":44.53223252176488,"hipx":-2.4000000000000004,"lean":-3.467767478235117,"ff":11.0,"bf":-18.735534956470232,"ffl":0.0,"bfl":0.0,"hx":8.2,"hy":-3.0,"ba":68.4,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":45.25,"hipx":-1.5,"lean":0.24999999999999975,"ff":11.75,"bf":-16.25,"ffl":0.0,"bfl":0.0,"hx":10.75,"hy":-6.75,"ba":48.0,"head":0.0,"behind":0,"trail":0,"aim":0.0}]},{"name":"flinch","loop":false,"motion":0.0,"poses":[{"crouch":45.0,"hipx":-1.4,"lean":0.4500000000000002,"ff":13.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":12.55,"hy":-9.85,"ba":23.1,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":43.82442949541505,"hipx":-2.8,"lean":-5.275570504584946,"ff":13.0,"bf":-17.351141009169893,"ffl":0.0,"bfl":0.0,"hx":10.100000000000001,"hy":-6.7,"ba":32.2,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":43.09788696740969,"hipx":-4.0,"lean":-9.902113032590307,"ff":13.0,"bf":-18.804226065180615,"ffl":0.0,"bfl":0.0,"hx":8.0,"hy":-4.0,"ba":40.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":43.09788696740969,"hipx":-3.2,"lean":-7.302113032590308,"ff":13.0,"bf":-18.804226065180615,"ffl":0.0,"bfl":0.0,"hx":9.399999999999999,"hy":-5.8,"ba":34.8,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":43.82442949541505,"hipx":-2.4,"lean":-3.9755705045849465,"ff":13.0,"bf":-17.351141009169893,"ffl":0.0,"bfl":0.0,"hx":10.8,"hy":-7.6000000000000005,"ba":29.6,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":45.0,"hipx":-1.4,"lean":0.44999999999999996,"ff":13.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":12.55,"hy":-9.85,"ba":23.1,"head":0.0,"behind":0,"trail":0,"aim":0.0}]},{"name":"death","loop":false,"motion":0.0,"poses":[{"crouch":44.45865886705355,"hipx":0.0,"lean":4.0,"ff":13.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":10.0,"hy":-22.0,"ba":-50.0,"head":-0.6766764161830635,"behind":0,"trail":0,"aim":0.0},{"crouch":39.573877361149464,"hipx":0.0,"lean":10.0,"ff":13.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":11.0,"hy":-23.0,"ba":-58.0,"head":-13.032653298563167,"behind":0,"trail":0,"aim":0.0},{"crouch":34.0,"hipx":0.0,"lean":16.0,"ff":13.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":12.5,"hy":-24.5,"ba":-69.0,"head":-17.0,"behind":0,"trail":0,"aim":0.0},{"crouch":31.573877361149467,"hipx":0.0,"lean":22.0,"ff":13.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":14.0,"hy":-26.0,"ba":-80.0,"head":-17.03265329856317,"behind":0,"trail":0,"aim":0.0},{"crouch":29.45865886705355,"hipx":0.0,"lean":28.5,"ff":11.5,"bf":-14.5,"ffl":0.0,"bfl":0.0,"hx":15.0,"hy":-28.0,"ba":-87.5,"head":-16.676676416183064,"behind":0,"trail":0,"aim":0.0},{"crouch":25.95556401384703,"hipx":0.0,"lean":35.0,"ff":10.0,"bf":-14.0,"ffl":0.0,"bfl":0.0,"hx":16.0,"hy":-30.0,"ba":-95.0,"head":-18.055544982691213,"behind":0,"trail":0,"aim":0.0},{"crouch":22.99865814948839,"hipx":1.0,"lean":45.0,"ff":7.0,"bf":-17.0,"ffl":0.0,"bfl":0.0,"hx":18.0,"hy":-28.0,"ba":-102.5,"head":-14.001677313139513,"behind":0,"trail":0,"aim":0.0},{"crouch":19.999985093387313,"hipx":2.0,"lean":55.0,"ff":4.0,"bf":-20.0,"ffl":0.0,"bfl":0.0,"hx":20.0,"hy":-26.0,"ba":-110.0,"head":-10.00001863326586,"behind":0,"trail":0,"aim":0.0},{"crouch":16.99999993908008,"hipx":3.0,"lean":65.0,"ff":-3.0,"bf":-25.0,"ffl":0.0,"bfl":0.0,"hx":21.0,"hy":-20.0,"ba":-130.0,"head":-7.000000076149899,"behind":0,"trail":0,"aim":0.0},{"crouch":13.999999999908411,"hipx":4.0,"lean":75.0,"ff":-10.0,"bf":-30.0,"ffl":0.0,"bfl":0.0,"hx":22.0,"hy":-14.0,"ba":-150.0,"head":-4.000000000114487,"behind":0,"trail":0,"aim":0.0},{"crouch":11.999999999999948,"hipx":3.0,"lean":81.5,"ff":-24.0,"bf":-38.0,"ffl":0.0,"bfl":0.0,"hx":19.0,"hy":-9.0,"ba":14.0,"head":-2.0000000000000635,"behind":0,"trail":0,"aim":0.0},{"crouch":10.0,"hipx":2.0,"lean":88.0,"ff":-38.0,"bf":-46.0,"ffl":0.0,"bfl":0.0,"hx":16.0,"hy":-4.0,"ba":178.0,"head":-1.2883785545774904e-17,"behind":0,"trail":0,"aim":0.0}]},{"name":"bow","loop":false,"motion":0.0,"poses":[{"crouch":49.0,"hipx":0.0,"lean":2.0,"ff":5.0,"bf":-5.0,"ffl":0.0,"bfl":0.0,"hx":7.0,"hy":-29.0,"ba":-140.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":49.0,"hipx":0.0,"lean":10.0,"ff":5.0,"bf":-5.0,"ffl":0.0,"bfl":0.0,"hx":7.0,"hy":-29.0,"ba":-140.0,"head":3.0,"behind":0,"trail":0,"aim":0.0},{"crouch":49.0,"hipx":0.0,"lean":18.0,"ff":5.0,"bf":-5.0,"ffl":0.0,"bfl":0.0,"hx":7.0,"hy":-29.0,"ba":-140.0,"head":6.0,"behind":0,"trail":0,"aim":0.0},{"crouch":49.0,"hipx":0.0,"lean":26.0,"ff":5.0,"bf":-5.0,"ffl":0.0,"bfl":0.0,"hx":7.0,"hy":-29.0,"ba":-140.0,"head":8.0,"behind":0,"trail":0,"aim":0.0},{"crouch":49.0,"hipx":0.0,"lean":34.0,"ff":5.0,"bf":-5.0,"ffl":0.0,"bfl":0.0,"hx":7.0,"hy":-29.0,"ba":-140.0,"head":10.0,"behind":0,"trail":0,"aim":0.0}]},{"name":"rise","loop":false,"motion":0.0,"poses":[{"crouch":48.136,"hipx":0.0,"lean":2.648,"ff":6.728,"bf":-7.16,"ffl":0.0,"bfl":0.0,"hx":8.728,"hy":-25.544,"ba":-106.73599999999999,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":46.408,"hipx":0.0,"lean":3.944,"ff":10.184000000000001,"bf":-11.48,"ffl":0.0,"bfl":0.0,"hx":12.184000000000001,"hy":-18.631999999999998,"ba":-40.208,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":45.243,"hipx":0.0,"lean":4.81775,"ff":12.514,"bf":-14.392499999999998,"ffl":0.0,"bfl":0.0,"hx":14.514,"hy":-13.972000000000001,"ba":4.644499999999994,"head":0.0,"behind":0,"trail":0,"aim":0.0}]},{"name":"jump","loop":false,"motion":0.0,"poses":[{"crouch":38.0,"hipx":0.0,"lean":11.0,"ff":13.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":15.0,"hy":-13.0,"ba":14.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":45.0,"hipx":0.0,"lean":9.5,"ff":11.5,"bf":-13.5,"ffl":6.5,"bfl":5.5,"hx":15.0,"hy":-11.5,"ba":14.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":45.0,"hipx":0.0,"lean":14.0,"ff":10.0,"bf":-12.0,"ffl":13.0,"bfl":11.0,"hx":15.0,"hy":-10.0,"ba":14.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":45.0,"hipx":0.0,"lean":17.0,"ff":10.0,"bf":-12.0,"ffl":13.0,"bfl":11.0,"hx":15.0,"hy":-10.0,"ba":14.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":45.0,"hipx":0.0,"lean":8.6,"ff":11.8,"bf":-13.8,"ffl":5.2,"bfl":4.4,"hx":15.0,"hy":-11.8,"ba":14.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":38.0,"hipx":0.0,"lean":11.0,"ff":13.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":15.0,"hy":-13.0,"ba":14.0,"head":0.0,"behind":0,"trail":0,"aim":0.0}]},{"name":"crouch","loop":false,"motion":0.0,"poses":[{"crouch":36.0,"hipx":0.0,"lean":12.0,"ff":15.0,"bf":-17.0,"ffl":0.0,"bfl":0.0,"hx":16.0,"hy":-20.0,"ba":-6.0,"head":2.0,"behind":0,"trail":0,"aim":0.0},{"crouch":29.0,"hipx":0.0,"lean":15.0,"ff":16.0,"bf":-19.0,"ffl":0.0,"bfl":0.0,"hx":17.0,"hy":-24.0,"ba":-10.0,"head":4.0,"behind":0,"trail":0,"aim":0.0}]},{"name":"chiburi","loop":false,"motion":0.0,"poses":[{"crouch":45.0,"hipx":0.0,"lean":2.0,"ff":13.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":12.0,"hy":4.0,"ba":118.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":47.0,"hipx":0.0,"lean":0.0,"ff":13.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":14.0,"hy":10.0,"ba":140.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":45.0,"hipx":0.0,"lean":10.0,"ff":13.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":24.0,"hy":-14.0,"ba":-40.0,"head":0.0,"behind":0,"trail":1,"aim":0.0},{"crouch":43.0,"hipx":0.0,"lean":12.0,"ff":13.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":24.0,"hy":-24.0,"ba":-62.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":43.0,"hipx":0.0,"lean":11.0,"ff":13.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":23.0,"hy":-25.0,"ba":-64.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":44.0,"hipx":0.0,"lean":9.0,"ff":13.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":22.0,"hy":-24.0,"ba":-60.0,"head":0.0,"behind":0,"trail":0,"aim":0.0}],"only":["lieve"]},{"name":"iai","loop":true,"motion":0.0,"poses":[{"crouch":40.0,"hipx":0.0,"lean":11.0,"ff":18.0,"bf":-18.0,"ffl":0.0,"bfl":0.0,"hx":3.0,"hy":-25.0,"ba":-166.0,"head":-2.0,"behind":1,"trail":0,"aim":0.0},{"crouch":39.6,"hipx":0.0,"lean":11.5,"ff":18.0,"bf":-18.0,"ffl":0.0,"bfl":0.0,"hx":3.0,"hy":-25.4,"ba":-166.0,"head":-2.0,"behind":1,"trail":0,"aim":0.0}]},{"name":"yield","loop":false,"motion":0.0,"poses":[{"crouch":36.0,"hipx":0.0,"lean":12.0,"ff":13.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":12.0,"hy":-22.0,"ba":-20.0,"head":6.0,"behind":0,"trail":0,"aim":0.0},{"crouch":28.0,"hipx":0.0,"lean":16.0,"ff":14.0,"bf":-24.0,"ffl":0.0,"bfl":0.0,"hx":12.0,"hy":-30.0,"ba":-8.0,"head":10.0,"behind":0,"trail":0,"aim":0.0},{"crouch":25.0,"hipx":0.0,"lean":18.0,"ff":13.0,"bf":-26.0,"ffl":0.0,"bfl":0.0,"hx":13.0,"hy":-33.0,"ba":-3.0,"head":14.0,"behind":0,"trail":0,"aim":0.0},{"crouch":25.0,"hipx":0.0,"lean":19.0,"ff":13.0,"bf":-26.0,"ffl":0.0,"bfl":0.0,"hx":13.0,"hy":-33.5,"ba":-3.0,"head":16.0,"behind":0,"trail":0,"aim":0.0}],"only":["kenji","hozen","gonzo","kagero","kurogane","sailor","morsel"]},{"name":"sidestep","loop":false,"motion":1.2,"poses":[{"crouch":41.4,"hipx":0.0,"lean":6.5,"ff":11.0,"bf":-12.5,"ffl":0.0,"bfl":0.0,"hx":15.0,"hy":-13.0,"ba":14.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":40.094213982588094,"hipx":0.0,"lean":8.650825608676337,"ff":9.0,"bf":-10.0,"ffl":0.0,"bfl":0.0,"hx":15.0,"hy":-12.47933951305893,"ba":14.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":42.650930371948846,"hipx":0.0,"lean":6.672747223702045,"ff":7.5,"bf":-8.0,"ffl":2.0,"bfl":1.5,"hx":15.0,"hy":-10.561802221038365,"ba":14.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":44.95988465949092,"hipx":0.0,"lean":4.462391868272736,"ff":6.0,"bf":-6.0,"ffl":4.0,"bfl":3.0,"hx":15.0,"hy":-8.83008650538181,"ba":14.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":44.95988465949092,"hipx":0.0,"lean":2.4623918682727357,"ff":6.0,"bf":-6.0,"ffl":4.0,"bfl":3.0,"hx":15.0,"hy":-8.83008650538181,"ba":14.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":41.650930371948846,"hipx":0.0,"lean":7.772747223702044,"ff":11.399999999999999,"bf":-12.6,"ffl":1.6,"bfl":1.2000000000000002,"hx":15.0,"hy":-12.061802221038365,"ba":14.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":39.094213982588094,"hipx":0.0,"lean":9.650825608676337,"ff":15.0,"bf":-17.0,"ffl":0.0,"bfl":0.0,"hx":15.0,"hy":-14.47933951305893,"ba":14.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":40.9,"hipx":0.0,"lean":7.0,"ff":14.0,"bf":-16.0,"ffl":0.0,"bfl":0.0,"hx":15.0,"hy":-14.0,"ba":14.0,"head":0.0,"behind":0,"trail":0,"aim":0.0}]},{"name":"backstep","loop":false,"motion":-3.0,"poses":[{"crouch":44.5,"hipx":-2.0,"lean":-0.5,"ff":8.5,"bf":-17.5,"ffl":0.0,"bfl":0.0,"hx":12.5,"hy":-9.5,"ba":37.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":43.9,"hipx":-5.175570504584947,"lean":-8.351141009169893,"ff":4.0,"bf":-20.0,"ffl":0.0,"bfl":0.0,"hx":10.0,"hy":-6.0,"ba":60.0,"head":1.469463130731183,"behind":0,"trail":0,"aim":0.0},{"crouch":45.6,"hipx":-7.902113032590307,"lean":-14.804226065180615,"ff":-3.0,"bf":-18.0,"ffl":3.0,"bfl":0.0,"hx":9.0,"hy":-1.0,"ba":78.0,"head":2.3776412907378837,"behind":0,"trail":0,"aim":0.0},{"crouch":42.6,"hipx":-4.902113032590307,"lean":-8.304226065180615,"ff":4.5,"bf":-17.5,"ffl":1.5,"bfl":0.0,"hx":11.0,"hy":-5.5,"ba":54.0,"head":2.377641290737884,"behind":0,"trail":0,"aim":0.0},{"crouch":39.4,"hipx":-1.1755705045849465,"lean":-0.351141009169893,"ff":12.0,"bf":-17.0,"ffl":0.0,"bfl":0.0,"hx":13.0,"hy":-10.0,"ba":30.0,"head":1.4694631307311832,"behind":0,"trail":0,"aim":0.0},{"crouch":40.5,"hipx":-2.4492935982947064e-16,"lean":3.4999999999999996,"ff":12.5,"bf":-16.0,"ffl":0.0,"bfl":0.0,"hx":14.0,"hy":-11.5,"ba":22.0,"head":3.061616997868383e-16,"behind":0,"trail":0,"aim":0.0}]},{"name":"hit_low","loop":false,"motion":0.0,"poses":[{"crouch":39.400425863264275,"hipx":-1.749574136735728,"lean":9.151064658160681,"ff":15.75,"bf":-13.499361205103591,"ffl":0.0,"bfl":0.0,"hx":13.35,"hy":-19.05,"ba":-12.950000000000003,"head":5.830502714195552,"behind":0,"trail":0,"aim":0.0},{"crouch":34.472805723768545,"hipx":-3.5271942762314534,"lean":11.682014309421366,"ff":18.0,"bf":-12.790791414347181,"ffl":0.0,"bfl":0.0,"hx":12.0,"hy":-24.0,"ba":-35.0,"head":11.0,"behind":0,"trail":0,"aim":0.0},{"crouch":33.56693737885242,"hipx":-4.433062621147578,"lean":10.977343447131055,"ff":18.0,"bf":-14.149593931721368,"ffl":0.0,"bfl":0.0,"hx":12.0,"hy":-24.0,"ba":-35.0,"head":9.080502714195552,"behind":0,"trail":0,"aim":0.0},{"crouch":35.5,"hipx":-4.25,"lean":6.0,"ff":16.75,"bf":-15.75,"ffl":0.0,"bfl":0.0,"hx":12.75,"hy":-21.25,"ba":-22.75,"head":4.16690070733681,"behind":0,"trail":0,"aim":0.0},{"crouch":38.56693737885242,"hipx":-2.9330626211475783,"lean":5.417343447131054,"ff":15.5,"bf":-15.649593931721368,"ffl":0.0,"bfl":0.0,"hx":13.5,"hy":-18.5,"ba":-10.5,"head":2.514872513059998,"behind":0,"trail":0,"aim":0.0},{"crouch":41.972805723768545,"hipx":-1.2771942762314534,"lean":5.682014309421366,"ff":14.25,"bf":-15.040791414347181,"ffl":0.0,"bfl":0.0,"hx":14.25,"hy":-15.75,"ba":1.75,"head":1.2501398546068576,"behind":0,"trail":0,"aim":0.0}]},{"name":"hit_mid","loop":false,"motion":0.0,"poses":[{"crouch":42.150425863264275,"hipx":-3.399574136735728,"lean":15.201064658160682,"ff":11.35,"bf":-16.79936120510359,"ffl":0.0,"bfl":0.0,"hx":8.95,"hy":-13.55,"ba":-26.700000000000003,"head":9.680502714195553,"behind":0,"trail":0,"aim":0.0},{"crouch":39.472805723768545,"hipx":-6.527194276231453,"lean":22.682014309421366,"ff":10.0,"bf":-18.79079141434718,"ffl":0.0,"bfl":0.0,"hx":4.0,"hy":-14.0,"ba":-60.0,"head":18.0,"behind":0,"trail":0,"aim":0.0},{"crouch":38.56693737885242,"hipx":-7.433062621147578,"lean":23.297343447131055,"ff":10.0,"bf":-20.14959393172137,"ffl":0.0,"bfl":0.0,"hx":4.0,"hy":-14.0,"ba":-60.0,"head":17.480502714195552,"behind":0,"trail":0,"aim":0.0},{"crouch":39.25,"hipx":-6.5,"lean":14.25,"ff":10.75,"bf":-20.25,"ffl":0.0,"bfl":0.0,"hx":6.75,"hy":-13.75,"ba":-41.5,"head":9.41690070733681,"behind":0,"trail":0,"aim":0.0},{"crouch":41.06693737885242,"hipx":-4.433062621147578,"lean":10.917343447131053,"ff":11.5,"bf":-18.64959393172137,"ffl":0.0,"bfl":0.0,"hx":9.5,"hy":-13.5,"ba":-23.0,"head":6.0148725130599985,"behind":0,"trail":0,"aim":0.0},{"crouch":43.222805723768545,"hipx":-2.0271942762314534,"lean":8.432014309421366,"ff":12.25,"bf":-16.54079141434718,"ffl":0.0,"bfl":0.0,"hx":12.25,"hy":-13.25,"ba":-4.5,"head":3.0001398546068576,"behind":0,"trail":0,"aim":0.0}]},{"name":"hit_high","loop":false,"motion":0.0,"poses":[{"crouch":45.45042586326427,"hipx":-2.8495741367357277,"lean":-5.698935341839321,"ff":13.0,"bf":-17.34936120510359,"ffl":0.0,"bfl":0.0,"hx":10.05,"hy":-3.6499999999999986,"ba":58.550000000000004,"head":-5.719497285804449,"behind":0,"trail":0,"aim":0.0},{"crouch":45.472805723768545,"hipx":-5.527194276231453,"lean":-15.317985690578634,"ff":13.0,"bf":-19.79079141434718,"ffl":0.0,"bfl":0.0,"hx":6.0,"hy":4.0,"ba":95.0,"head":-10.0,"behind":0,"trail":0,"aim":0.0},{"crouch":44.56693737885242,"hipx":-6.433062621147578,"lean":-19.262656552868947,"ff":13.0,"bf":-21.14959393172137,"ffl":0.0,"bfl":0.0,"hx":6.0,"hy":4.0,"ba":95.0,"head":-16.119497285804446,"behind":0,"trail":0,"aim":0.0},{"crouch":43.75,"hipx":-5.75,"lean":-14.25,"ff":13.0,"bf":-21.0,"ffl":0.0,"bfl":0.0,"hx":8.25,"hy":-0.25,"ba":74.75,"head":-11.58309929266319,"behind":0,"trail":0,"aim":0.0},{"crouch":44.06693737885242,"hipx":-3.9330626211475783,"lean":-8.082656552868947,"ff":13.0,"bf":-19.14959393172137,"ffl":0.0,"bfl":0.0,"hx":10.5,"hy":-4.5,"ba":54.5,"head":-7.9851274869400015,"behind":0,"trail":0,"aim":0.0},{"crouch":44.722805723768545,"hipx":-1.7771942762314534,"lean":-1.0679856905786338,"ff":13.0,"bf":-16.79079141434718,"ffl":0.0,"bfl":0.0,"hx":12.75,"hy":-8.75,"ba":34.25,"head":-3.9998601453931424,"behind":0,"trail":0,"aim":0.0}]},{"name":"intro","loop":false,"motion":0.0,"poses":[{"crouch":49.0,"hipx":0.0,"lean":2.0,"ff":5.0,"bf":-5.0,"ffl":0.0,"bfl":0.0,"hx":7.0,"hy":-29.0,"ba":-140.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":48.778425655976676,"hipx":0.0,"lean":2.1661807580174925,"ff":5.443148688046647,"bf":-5.553935860058309,"ffl":0.0,"bfl":0.0,"hx":7.443148688046647,"hy":-28.113702623906704,"ba":-131.46938775510205,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":48.20699708454811,"hipx":0.0,"lean":2.5947521865889214,"ff":6.58600583090379,"bf":-6.982507288629738,"ffl":0.0,"bfl":0.0,"hx":8.58600583090379,"hy":-25.82798833819242,"ba":-109.46938775510205,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":47.42565597667638,"hipx":0.0,"lean":3.1807580174927113,"ff":8.14868804664723,"bf":-8.935860058309038,"ffl":0.0,"bfl":0.0,"hx":10.14868804664723,"hy":-22.70262390670554,"ba":-79.38775510204081,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":46.57434402332362,"hipx":0.0,"lean":3.8192419825072883,"ff":9.85131195335277,"bf":-11.06413994169096,"ffl":0.0,"bfl":0.0,"hx":11.85131195335277,"hy":-19.29737609329446,"ba":-46.6122448979592,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":45.79300291545189,"hipx":0.0,"lean":4.405247813411078,"ff":11.41399416909621,"bf":-13.017492711370263,"ffl":0.0,"bfl":0.0,"hx":13.41399416909621,"hy":-16.17201166180758,"ba":-16.530612244897966,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":45.221574344023324,"hipx":0.0,"lean":4.833819241982507,"ff":12.556851311953352,"bf":-14.446064139941692,"ffl":0.0,"bfl":0.0,"hx":14.556851311953352,"hy":-13.886297376093294,"ba":5.469387755102048,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":45.0,"hipx":0.0,"lean":5.0,"ff":13.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":15.0,"hy":-13.0,"ba":14.0,"head":0.0,"behind":0,"trail":0,"aim":0.0}],"by":{"kenji":[{"crouch":49.0,"hipx":0.0,"lean":2.0,"ff":5.0,"bf":-5.0,"ffl":0.0,"bfl":0.0,"hx":7.0,"hy":-29.0,"ba":-140.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":48.0,"hipx":0.0,"lean":2.0,"ff":7.5,"bf":-8.5,"ffl":0.0,"bfl":0.0,"hx":15.5,"hy":-13.5,"ba":-66.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":47.0,"hipx":0.0,"lean":2.0,"ff":10.0,"bf":-12.0,"ffl":0.0,"bfl":0.0,"hx":24.0,"hy":2.0,"ba":8.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":47.0,"hipx":0.0,"lean":2.0,"ff":10.0,"bf":-12.0,"ffl":0.0,"bfl":0.0,"hx":25.0,"hy":2.0,"ba":-10.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":47.0,"hipx":0.0,"lean":2.0,"ff":10.0,"bf":-12.0,"ffl":0.0,"bfl":0.0,"hx":24.0,"hy":2.0,"ba":8.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":47.0,"hipx":0.0,"lean":2.0,"ff":10.0,"bf":-12.0,"ffl":0.0,"bfl":0.0,"hx":25.0,"hy":2.0,"ba":-10.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":46.0,"hipx":0.0,"lean":3.5,"ff":11.5,"bf":-13.5,"ffl":0.0,"bfl":0.0,"hx":19.5,"hy":-5.5,"ba":11.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":45.0,"hipx":0.0,"lean":5.0,"ff":13.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":15.0,"hy":-13.0,"ba":14.0,"head":0.0,"behind":0,"trail":0,"aim":0.0}],"hozen":[{"crouch":46.0,"hipx":0.0,"lean":0.0,"ff":13.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":5.0,"hy":18.0,"ba":30.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":46.0,"hipx":0.0,"lean":0.0,"ff":13.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":5.0,"hy":18.0,"ba":90.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":46.0,"hipx":0.0,"lean":0.0,"ff":13.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":5.0,"hy":18.0,"ba":150.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":46.0,"hipx":0.0,"lean":0.0,"ff":13.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":5.0,"hy":18.0,"ba":210.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":46.0,"hipx":0.0,"lean":0.0,"ff":13.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":5.0,"hy":18.0,"ba":270.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":46.0,"hipx":0.0,"lean":0.0,"ff":13.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":5.0,"hy":18.0,"ba":330.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":46.0,"hipx":0.0,"lean":0.0,"ff":13.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":5.0,"hy":18.0,"ba":390.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":45.0,"hipx":0.0,"lean":5.0,"ff":13.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":15.0,"hy":-13.0,"ba":14.0,"head":0.0,"behind":0,"trail":0,"aim":0.0}],"gonzo":[{"crouch":45.5,"hipx":0.0,"lean":3.5,"ff":11.0,"bf":-12.0,"ffl":0.0,"bfl":0.0,"hx":10.5,"hy":-9.5,"ba":34.5,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":46.0,"hipx":0.0,"lean":2.0,"ff":9.0,"bf":-9.0,"ffl":0.0,"bfl":0.0,"hx":6.0,"hy":-6.0,"ba":55.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":45.0,"hipx":0.0,"lean":2.0,"ff":9.0,"bf":-9.0,"ffl":0.0,"bfl":0.0,"hx":6.0,"hy":-6.0,"ba":55.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":43.5,"hipx":0.0,"lean":-1.0,"ff":13.5,"bf":-13.5,"ffl":0.0,"bfl":0.0,"hx":16.0,"hy":-4.0,"ba":12.5,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":41.0,"hipx":0.0,"lean":-4.0,"ff":18.0,"bf":-18.0,"ffl":0.0,"bfl":0.0,"hx":26.0,"hy":-2.0,"ba":-30.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":38.0,"hipx":0.0,"lean":-2.0,"ff":18.0,"bf":-18.0,"ffl":0.0,"bfl":0.0,"hx":26.0,"hy":-2.0,"ba":-30.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":43.0,"hipx":0.0,"lean":0.5,"ff":15.5,"bf":-16.5,"ffl":0.0,"bfl":0.0,"hx":20.5,"hy":-7.5,"ba":-8.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":45.0,"hipx":0.0,"lean":5.0,"ff":13.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":15.0,"hy":-13.0,"ba":14.0,"head":0.0,"behind":0,"trail":0,"aim":0.0}],"kagero":[{"crouch":34.0,"hipx":0.0,"lean":16.0,"ff":17.0,"bf":-14.0,"ffl":0.0,"bfl":0.0,"hx":17.0,"hy":-14.0,"ba":0.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":34.0,"hipx":0.0,"lean":16.0,"ff":17.0,"bf":-14.0,"ffl":0.0,"bfl":0.0,"hx":17.0,"hy":-14.0,"ba":90.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":34.0,"hipx":0.0,"lean":16.0,"ff":17.0,"bf":-14.0,"ffl":0.0,"bfl":0.0,"hx":17.0,"hy":-14.0,"ba":180.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":34.0,"hipx":0.0,"lean":16.0,"ff":17.0,"bf":-14.0,"ffl":0.0,"bfl":0.0,"hx":17.0,"hy":-14.0,"ba":270.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":34.0,"hipx":0.0,"lean":16.0,"ff":17.0,"bf":-14.0,"ffl":0.0,"bfl":0.0,"hx":17.0,"hy":-14.0,"ba":360.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":34.0,"hipx":0.0,"lean":16.0,"ff":17.0,"bf":-14.0,"ffl":0.0,"bfl":0.0,"hx":17.0,"hy":-14.0,"ba":450.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":34.0,"hipx":0.0,"lean":16.0,"ff":17.0,"bf":-14.0,"ffl":0.0,"bfl":0.0,"hx":17.0,"hy":-14.0,"ba":540.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":40.5,"hipx":0.0,"lean":8.5,"ff":13.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":15.0,"hy":-13.0,"ba":14.0,"head":0.0,"behind":0,"trail":0,"aim":0.0}],"kurogane":[{"crouch":49.0,"hipx":0.0,"lean":2.0,"ff":5.0,"bf":-5.0,"ffl":0.0,"bfl":0.0,"hx":7.0,"hy":-29.0,"ba":-140.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":48.7,"hipx":0.0,"lean":0.5,"ff":5.9,"bf":-5.9,"ffl":0.0,"bfl":0.0,"hx":5.8,"hy":-13.700000000000001,"ba":-69.2,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":48.35,"hipx":0.0,"lean":-1.25,"ff":6.95,"bf":-6.95,"ffl":0.0,"bfl":0.0,"hx":4.4,"hy":4.149999999999999,"ba":13.400000000000006,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":48.0,"hipx":0.0,"lean":-3.0,"ff":8.0,"bf":-8.0,"ffl":0.0,"bfl":0.0,"hx":3.0,"hy":22.0,"ba":96.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":48.0,"hipx":0.0,"lean":-4.0,"ff":8.0,"bf":-8.0,"ffl":0.0,"bfl":0.0,"hx":3.0,"hy":22.0,"ba":96.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":46.8,"hipx":0.0,"lean":0.20000000000000018,"ff":10.0,"bf":-10.8,"ffl":0.0,"bfl":0.0,"hx":7.800000000000001,"hy":8.0,"ba":63.199999999999996,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":45.75,"hipx":0.0,"lean":3.0,"ff":11.75,"bf":-13.25,"ffl":0.0,"bfl":0.0,"hx":12.0,"hy":-4.25,"ba":34.5,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":45.0,"hipx":0.0,"lean":5.0,"ff":13.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":15.0,"hy":-13.0,"ba":14.0,"head":0.0,"behind":0,"trail":0,"aim":0.0}],"sailor":[{"crouch":45.0,"hipx":2.5244129544236893,"lean":5.0,"ff":13.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":12.0,"hy":-6.0,"ba":40.0,"head":-0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":45.0,"hipx":2.8389002630622433,"lean":12.04994218664735,"ff":13.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":19.708465483337545,"hy":3.63558185417193,"ba":88.17790927085966,"head":-4.699961457764901,"behind":0,"trail":0,"aim":0.0},{"crouch":45.0,"hipx":1.0049644504677153,"lean":13.764628677903756,"ff":13.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":16.124010974571714,"hy":-0.8449862817853582,"ba":65.77506859107321,"head":-5.843085785269171,"behind":0,"trail":0,"aim":0.0},{"crouch":45.0,"hipx":-1.5895084227254803,"lean":8.84641892210447,"ff":13.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":6.497870726528207,"hy":-12.877661591839741,"ba":5.6116920408012945,"head":-2.5642792814029787,"behind":0,"trail":0,"aim":0.0},{"crouch":45.0,"hipx":-2.9810730109003933,"lean":1.017316010346328,"ff":13.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":4.932362754238775,"hy":-14.83454655720153,"ba":-4.172732786007657,"head":2.655122659769115,"behind":0,"trail":0,"aim":0.0},{"crouch":45.0,"hipx":-2.1166209767111757,"lean":-3.797771058985873,"ff":13.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":13.720959904702525,"hy":-3.8488001191218446,"ba":50.75599940439078,"head":5.865180705990582,"behind":0,"trail":0,"aim":0.0},{"crouch":45.0,"hipx":0.3496476145514809,"lean":-1.9548803880038843,"ff":13.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":19.98834676299684,"hy":3.985433453746049,"ba":89.92716726873024,"head":4.636586925335923,"behind":0,"trail":0,"aim":0.0},{"crouch":45.0,"hipx":0.0,"lean":5.0,"ff":13.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":15.0,"hy":-13.0,"ba":14.0,"head":0.0,"behind":0,"trail":0,"aim":0.0}],"morsel":[{"crouch":49.0,"hipx":0.0,"lean":2.0,"ff":5.0,"bf":-5.0,"ffl":0.0,"bfl":0.0,"hx":7.0,"hy":-29.0,"ba":-140.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":48.5,"hipx":0.0,"lean":1.0,"ff":6.5,"bf":-7.5,"ffl":0.0,"bfl":0.0,"hx":7.5,"hy":-10.5,"ba":-26.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":48.0,"hipx":0.0,"lean":0.0,"ff":8.0,"bf":-10.0,"ffl":0.0,"bfl":0.0,"hx":8.0,"hy":8.0,"ba":88.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":48.0,"hipx":0.0,"lean":0.0,"ff":8.0,"bf":-10.0,"ffl":0.0,"bfl":0.0,"hx":8.0,"hy":8.0,"ba":88.0,"head":4.0,"behind":0,"trail":0,"aim":0.0},{"crouch":46.5,"hipx":0.0,"lean":2.5,"ff":10.5,"bf":-12.5,"ffl":0.0,"bfl":0.0,"hx":15.0,"hy":-9.0,"ba":19.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":45.0,"hipx":0.0,"lean":5.0,"ff":13.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":22.0,"hy":-26.0,"ba":-50.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":45.0,"hipx":0.0,"lean":5.0,"ff":13.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":18.5,"hy":-19.5,"ba":-18.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":45.0,"hipx":0.0,"lean":5.0,"ff":13.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":15.0,"hy":-13.0,"ba":14.0,"head":0.0,"behind":0,"trail":0,"aim":0.0}]},"only":["kenji","hozen","gonzo","kagero","kurogane","sailor","morsel"]},{"name":"victory","loop":false,"motion":0.0,"poses":[{"crouch":45.0,"hipx":0.0,"lean":5.0,"ff":13.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":12.5,"hy":-3.5,"ba":62.0,"head":0.0,"behind":1,"trail":0,"aim":0.0},{"crouch":45.0,"hipx":0.0,"lean":5.0,"ff":13.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":10.0,"hy":6.0,"ba":110.0,"head":0.0,"behind":1,"trail":0,"aim":0.0},{"crouch":45.0,"hipx":0.0,"lean":10.0,"ff":13.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":22.0,"hy":-18.0,"ba":-35.0,"head":0.0,"behind":0,"trail":1,"aim":0.0},{"crouch":46.5,"hipx":0.0,"lean":6.5,"ff":10.5,"bf":-11.5,"ffl":0.0,"bfl":0.0,"hx":18.0,"hy":-23.0,"ba":-40.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":48.0,"hipx":0.0,"lean":3.0,"ff":8.0,"bf":-8.0,"ffl":0.0,"bfl":0.0,"hx":14.0,"hy":-28.0,"ba":-45.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":49.0,"hipx":0.0,"lean":2.0,"ff":6.0,"bf":-6.0,"ffl":0.0,"bfl":0.0,"hx":12.0,"hy":-30.0,"ba":-50.0,"head":0.0,"behind":0,"trail":0,"aim":0.0}],"by":{"kenji":[{"crouch":45.0,"hipx":0.0,"lean":5.0,"ff":13.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":12.5,"hy":-3.5,"ba":62.0,"head":0.0,"behind":1,"trail":0,"aim":0.0},{"crouch":45.0,"hipx":0.0,"lean":5.0,"ff":13.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":10.0,"hy":6.0,"ba":110.0,"head":0.0,"behind":1,"trail":0,"aim":0.0},{"crouch":46.6,"hipx":0.0,"lean":3.0,"ff":10.2,"bf":-11.4,"ffl":0.0,"bfl":0.0,"hx":7.6,"hy":2.8,"ba":130.8,"head":0.0,"behind":1,"trail":0,"aim":0.0},{"crouch":48.2,"hipx":0.0,"lean":1.0,"ff":7.3999999999999995,"bf":-7.8,"ffl":0.0,"bfl":0.0,"hx":5.199999999999999,"hy":-0.40000000000000036,"ba":151.6,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":49.0,"hipx":0.0,"lean":0.0,"ff":6.0,"bf":-6.0,"ffl":0.0,"bfl":0.0,"hx":4.0,"hy":-2.0,"ba":162.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":49.0,"hipx":0.0,"lean":1.0,"ff":6.0,"bf":-6.0,"ffl":0.0,"bfl":0.0,"hx":4.0,"hy":-2.0,"ba":162.0,"head":2.0,"behind":0,"trail":0,"aim":0.0}],"hozen":[{"crouch":45.0,"hipx":0.0,"lean":5.0,"ff":13.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":12.5,"hy":-3.5,"ba":62.0,"head":0.0,"behind":1,"trail":0,"aim":0.0},{"crouch":45.0,"hipx":0.0,"lean":5.0,"ff":13.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":10.0,"hy":6.0,"ba":110.0,"head":0.0,"behind":1,"trail":0,"aim":0.0},{"crouch":46.6,"hipx":0.0,"lean":2.5999999999999996,"ff":9.8,"bf":-11.0,"ffl":0.0,"bfl":0.0,"hx":10.8,"hy":-1.2000000000000002,"ba":30.0,"head":0.0,"behind":1,"trail":0,"aim":0.0},{"crouch":48.2,"hipx":0.0,"lean":0.1999999999999993,"ff":6.6,"bf":-7.0,"ffl":0.0,"bfl":0.0,"hx":11.6,"hy":-8.4,"ba":-50.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":49.0,"hipx":0.0,"lean":-1.0,"ff":5.0,"bf":-5.0,"ffl":0.0,"bfl":0.0,"hx":12.0,"hy":-12.0,"ba":-90.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":49.0,"hipx":0.0,"lean":0.0,"ff":5.0,"bf":-5.0,"ffl":0.0,"bfl":0.0,"hx":12.0,"hy":-12.0,"ba":-90.0,"head":2.0,"behind":0,"trail":0,"aim":0.0}],"gonzo":[{"crouch":45.0,"hipx":0.0,"lean":5.0,"ff":13.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":12.5,"hy":-3.5,"ba":62.0,"head":0.0,"behind":1,"trail":0,"aim":0.0},{"crouch":45.0,"hipx":0.0,"lean":5.0,"ff":13.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":10.0,"hy":6.0,"ba":110.0,"head":0.0,"behind":1,"trail":0,"aim":0.0},{"crouch":45.4,"hipx":0.0,"lean":3.8,"ff":11.4,"bf":-12.6,"ffl":0.0,"bfl":0.0,"hx":8.4,"hy":1.1999999999999993,"ba":88.0,"head":0.0,"behind":1,"trail":0,"aim":0.0},{"crouch":45.8,"hipx":0.0,"lean":2.5999999999999996,"ff":9.8,"bf":-10.2,"ffl":0.0,"bfl":0.0,"hx":6.8,"hy":-3.6000000000000014,"ba":66.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":46.0,"hipx":0.0,"lean":2.0,"ff":9.0,"bf":-9.0,"ffl":0.0,"bfl":0.0,"hx":6.0,"hy":-6.0,"ba":55.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":46.0,"hipx":0.0,"lean":3.0,"ff":9.0,"bf":-9.0,"ffl":0.0,"bfl":0.0,"hx":6.0,"hy":-6.0,"ba":55.0,"head":2.0,"behind":0,"trail":0,"aim":0.0}],"kagero":[{"crouch":45.0,"hipx":0.0,"lean":5.0,"ff":13.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":12.5,"hy":-3.5,"ba":62.0,"head":0.0,"behind":1,"trail":0,"aim":0.0},{"crouch":45.0,"hipx":0.0,"lean":5.0,"ff":13.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":10.0,"hy":6.0,"ba":110.0,"head":0.0,"behind":1,"trail":0,"aim":0.0},{"crouch":41.4,"hipx":0.0,"lean":8.6,"ff":14.2,"bf":-14.6,"ffl":0.0,"bfl":0.0,"hx":12.4,"hy":-5.200000000000001,"ba":38.0,"head":0.0,"behind":1,"trail":0,"aim":0.0},{"crouch":37.8,"hipx":0.0,"lean":12.2,"ff":15.4,"bf":-14.2,"ffl":0.0,"bfl":0.0,"hx":14.8,"hy":-16.400000000000002,"ba":-34.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":36.0,"hipx":0.0,"lean":14.0,"ff":16.0,"bf":-14.0,"ffl":0.0,"bfl":0.0,"hx":16.0,"hy":-22.0,"ba":-70.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":36.0,"hipx":0.0,"lean":15.0,"ff":16.0,"bf":-14.0,"ffl":0.0,"bfl":0.0,"hx":16.0,"hy":-22.0,"ba":-70.0,"head":2.0,"behind":0,"trail":0,"aim":0.0}],"kurogane":[{"crouch":45.0,"hipx":0.0,"lean":5.0,"ff":13.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":12.5,"hy":-3.5,"ba":62.0,"head":0.0,"behind":1,"trail":0,"aim":0.0},{"crouch":45.0,"hipx":0.0,"lean":5.0,"ff":13.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":10.0,"hy":6.0,"ba":110.0,"head":0.0,"behind":1,"trail":0,"aim":0.0},{"crouch":46.2,"hipx":0.0,"lean":1.7999999999999998,"ff":11.0,"bf":-12.2,"ffl":0.0,"bfl":0.0,"hx":7.199999999999999,"hy":12.4,"ba":104.4,"head":0.0,"behind":1,"trail":0,"aim":0.0},{"crouch":47.4,"hipx":0.0,"lean":-1.4000000000000004,"ff":9.0,"bf":-9.399999999999999,"ffl":0.0,"bfl":0.0,"hx":4.3999999999999995,"hy":18.8,"ba":98.8,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":48.0,"hipx":0.0,"lean":-3.0,"ff":8.0,"bf":-8.0,"ffl":0.0,"bfl":0.0,"hx":3.0,"hy":22.0,"ba":96.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":48.0,"hipx":0.0,"lean":-2.0,"ff":8.0,"bf":-8.0,"ffl":0.0,"bfl":0.0,"hx":3.0,"hy":22.0,"ba":96.0,"head":2.0,"behind":0,"trail":0,"aim":0.0}],"sailor":[{"crouch":45.0,"hipx":0.0,"lean":5.0,"ff":13.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":12.5,"hy":-3.5,"ba":62.0,"head":0.0,"behind":1,"trail":0,"aim":0.0},{"crouch":45.0,"hipx":0.0,"lean":5.0,"ff":13.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":10.0,"hy":6.0,"ba":110.0,"head":0.0,"behind":1,"trail":0,"aim":0.0},{"crouch":45.8,"hipx":0.0,"lean":-0.20000000000000018,"ff":11.4,"bf":-12.6,"ffl":0.0,"bfl":0.0,"hx":10.0,"hy":10.0,"ba":107.6,"head":-2.4000000000000004,"behind":1,"trail":0,"aim":0.0},{"crouch":46.6,"hipx":0.0,"lean":-5.4,"ff":9.8,"bf":-10.2,"ffl":0.0,"bfl":0.0,"hx":10.0,"hy":14.0,"ba":105.2,"head":-4.800000000000001,"behind":0,"trail":0,"aim":0.0},{"crouch":47.0,"hipx":0.0,"lean":-8.0,"ff":9.0,"bf":-9.0,"ffl":0.0,"bfl":0.0,"hx":10.0,"hy":16.0,"ba":104.0,"head":-6.0,"behind":0,"trail":0,"aim":0.0},{"crouch":47.0,"hipx":0.0,"lean":-7.0,"ff":9.0,"bf":-9.0,"ffl":0.0,"bfl":0.0,"hx":10.0,"hy":16.0,"ba":104.0,"head":2.0,"behind":0,"trail":0,"aim":0.0}],"morsel":[{"crouch":45.0,"hipx":0.0,"lean":5.0,"ff":13.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":12.5,"hy":-3.5,"ba":62.0,"head":0.0,"behind":1,"trail":0,"aim":0.0},{"crouch":45.0,"hipx":0.0,"lean":5.0,"ff":13.0,"bf":-15.0,"ffl":0.0,"bfl":0.0,"hx":10.0,"hy":6.0,"ba":110.0,"head":0.0,"behind":1,"trail":0,"aim":0.0},{"crouch":46.6,"hipx":0.0,"lean":2.5999999999999996,"ff":10.2,"bf":-11.8,"ffl":0.0,"bfl":0.0,"hx":11.6,"hy":-6.800000000000001,"ba":30.799999999999997,"head":0.0,"behind":1,"trail":0,"aim":0.0},{"crouch":48.2,"hipx":0.0,"lean":0.1999999999999993,"ff":7.3999999999999995,"bf":-8.6,"ffl":0.0,"bfl":0.0,"hx":13.2,"hy":-19.6,"ba":-48.400000000000006,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":49.0,"hipx":0.0,"lean":-1.0,"ff":6.0,"bf":-7.0,"ffl":0.0,"bfl":0.0,"hx":14.0,"hy":-26.0,"ba":-88.0,"head":0.0,"behind":0,"trail":0,"aim":0.0},{"crouch":49.0,"hipx":0.0,"lean":0.0,"ff":6.0,"bf":-7.0,"ffl":0.0,"bfl":0.0,"hx":14.0,"hy":-26.0,"ba":-88.0,"head":2.0,"behind":0,"trail":0,"aim":0.0}]}}];
+const DEFAULTS = {"lieve": {"scale": 1.16, "torso": 30, "neck": 5, "head_r": 6.4, "uarm": 16, "farm": 15, "thigh": 24.5, "shin": 24.5, "blade": 42, "build": 0.9, "hair": "braid", "headband": false, "tail_len": 9, "flare": 1.2, "chest": 0.4, "figure": 0.5, "bangs": true, "sidelocks": false, "eyes": 1, "lips": true, "obi": 3, "upright": 1, "chest_depth": 0.8, "vneck": true, "staff_back": 22, "palette": [[0, 0, 0], [24, 14, 20], [150, 84, 64], [212, 144, 108], [248, 202, 162], [130, 24, 12], [214, 60, 26], [252, 130, 60], [126, 122, 136], [198, 194, 200], [248, 246, 240], [26, 30, 62], [46, 56, 104], [82, 98, 156], [240, 244, 252], [150, 160, 180]]}, "kenji": {"scale": 1.22, "torso": 31, "neck": 3.2, "head_r": 6.6, "uarm": 16.5, "farm": 15.5, "thigh": 24.5, "shin": 24.5, "blade": 44, "build": 0.85, "hair": "topknot", "headband": true, "tail_len": 4.2, "flare": 1, "chest": 0, "figure": 0, "upright": 1, "chest_depth": 0.85, "vneck": true, "weapon": "bokken", "staff_back": 22, "palette": [[0, 0, 0], [16, 10, 14], [122, 72, 48], [190, 126, 86], [230, 176, 130], [14, 12, 18], [44, 38, 48], [84, 76, 92], [40, 30, 56], [74, 60, 104], [122, 104, 158], [62, 60, 66], [108, 104, 112], [158, 154, 162], [240, 240, 236], [150, 156, 170]]}, "hozen": {"scale": 1.24, "torso": 31, "neck": 4.6, "head_r": 6.6, "uarm": 17, "farm": 16, "thigh": 25, "shin": 25, "blade": 42, "build": 0.92, "hair": "bald", "headband": true, "tail_len": 4, "flare": 1.15, "chest": 0, "figure": 0, "bangs": false, "sidelocks": false, "eyes": 0, "lips": false, "obi": 0, "upright": 1, "chest_depth": 0.85, "vneck": true, "weapon": "bo", "staff_back": 20, "ears": true, "kesa": true, "palette": [[0, 0, 0], [18, 12, 10], [140, 92, 62], [196, 140, 98], [236, 190, 146], [150, 70, 16], [214, 120, 30], [250, 180, 70], [66, 58, 52], [112, 100, 88], [160, 148, 132], [52, 46, 42], [90, 80, 70], [132, 120, 106], [240, 244, 252], [150, 160, 180]]}, "gonzo": {"scale": 1.3, "torso": 32, "neck": 4.8, "head_r": 7, "uarm": 17.5, "farm": 16.5, "thigh": 25, "shin": 24, "blade": 38, "build": 1.3, "hair": "topknot", "headband": false, "tail_len": 4, "flare": 1.05, "chest": 0, "figure": 0, "bangs": false, "sidelocks": false, "eyes": 0, "lips": false, "obi": 1, "upright": 1, "chest_depth": 0.82, "vneck": true, "weapon": "dual", "staff_back": 22, "ears": false, "bare_arms": true, "palette": [[0, 0, 0], [16, 10, 8], [150, 92, 60], [204, 140, 96], [240, 188, 140], [18, 14, 16], [52, 44, 48], [96, 86, 90], [30, 52, 40], [52, 86, 64], [92, 130, 100], [70, 46, 30], [112, 76, 48], [156, 112, 74], [240, 244, 252], [150, 160, 180]]}, "kagero": {"scale": 1.14, "torso": 29, "neck": 4.6, "head_r": 6.2, "uarm": 15.5, "farm": 15, "thigh": 24, "shin": 24, "blade": 15, "build": 0.6, "hair": "bald", "headband": false, "tail_len": 4, "flare": 0.75, "chest": 0.25, "figure": 0.45, "bangs": false, "sidelocks": false, "eyes": 1, "lips": false, "obi": 1, "upright": 1, "chest_depth": 0.8, "vneck": true, "weapon": "knives", "staff_back": 22, "hood": true, "palette": [[0, 0, 0], [12, 10, 16], [160, 104, 74], [214, 156, 116], [246, 200, 160], [90, 20, 24], [150, 34, 34], [200, 60, 50], [28, 32, 44], [48, 56, 74], [80, 90, 112], [24, 28, 38], [42, 48, 64], [70, 78, 98], [236, 240, 248], [140, 150, 172]]}, "kurogane": {"scale": 1.46, "torso": 32, "neck": 4.8, "head_r": 6.8, "uarm": 17.5, "farm": 16.5, "thigh": 25, "shin": 24.5, "blade": 56, "build": 1.25, "hair": "bald", "headband": true, "tail_len": 4, "flare": 1.1, "chest": 0, "figure": 0, "bangs": false, "sidelocks": false, "eyes": 0, "lips": false, "obi": 3, "upright": 1, "chest_depth": 0.84, "vneck": false, "weapon": "nodachi", "staff_back": 22, "helm": true, "menpo": true, "sode": true, "lames": true, "kusazuri": true, "gauntlets": true, "palette": [[0, 0, 0], [8, 6, 10], [110, 70, 50], [160, 110, 80], [200, 150, 110], [120, 84, 20], [200, 150, 40], [250, 214, 96], [14, 14, 20], [36, 38, 50], [78, 84, 104], [70, 12, 16], [120, 24, 26], [170, 44, 40], [236, 240, 248], [150, 158, 176]]}, "sailor": {"scale": 1.2, "torso": 31, "neck": 4.7, "head_r": 7, "uarm": 17, "farm": 16, "thigh": 24, "shin": 23.5, "blade": 30, "build": 1.12, "hair": "short", "headband": false, "tail_len": 4, "flare": 0.82, "chest": 0, "figure": 0, "bangs": false, "sidelocks": false, "eyes": 0, "lips": false, "obi": 0, "upright": 1, "chest_depth": 0.84, "vneck": false, "weapon": "cutlass", "staff_back": 22, "ears": false, "stripes": true, "knitcap": true, "beard": true, "palette": [[0, 0, 0], [22, 14, 16], [156, 84, 62], [214, 140, 108], [246, 190, 152], [150, 110, 40], [214, 170, 70], [246, 220, 130], [36, 44, 90], [200, 198, 190], [244, 242, 234], [70, 26, 24], [120, 44, 36], [168, 72, 54], [226, 230, 240], [150, 158, 176]]}, "morsel": {"scale": 1.22, "torso": 31, "neck": 4.6, "head_r": 6.5, "uarm": 17, "farm": 16, "thigh": 25, "shin": 25, "blade": 41, "build": 0.95, "hair": "short", "headband": false, "tail_len": 4, "flare": 0.72, "chest": 0, "figure": 0, "bangs": false, "sidelocks": false, "eyes": 0, "lips": false, "obi": 3, "upright": 1, "chest_depth": 0.82, "vneck": false, "weapon": "rapier", "staff_back": 22, "hat": true, "ruff": true, "beard": true, "pistol": true, "palette": [[0, 0, 0], [14, 10, 14], [168, 112, 96], [222, 168, 140], [248, 212, 186], [60, 36, 24], [104, 66, 40], [150, 104, 64], [16, 16, 22], [42, 40, 52], [80, 76, 96], [40, 14, 22], [74, 26, 38], [112, 44, 58], [244, 244, 240], [150, 156, 170]]}};
+const BG = "data:image/png;base64,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";
+const R = KomoRender;
+const clone = o => JSON.parse(JSON.stringify(o));
+
+let chars = clone(DEFAULTS);
+const NAMES = { lieve: 'Lieve', kenji: 'Kenji', hozen: 'Hōzen', gonzo: 'Gonzō', kagero: 'Kagerō', kurogane: 'Kurogane', sailor: 'Sailor', morsel: 'Morsel' };
+const ALL = Object.keys(NAMES);
+try { const s = localStorage.getItem('komo-chars-draft'); if (s) { const d = JSON.parse(s); for (const k of ALL) if (d[k] && Array.isArray(d[k].palette)) chars[k] = Object.assign(clone(DEFAULTS[k]), d[k]); } } catch (e) {}
+let cur = 'lieve', opp = 'kenji';     /* opp: the master shown facing Lieve */
+
+/* ---------------- animation catalogue */
+const GROUPS = [
+  ['Idle', 'idle', true], ['Walk', 'walk', true], ['Guard', 'guard', true], ['Strike', 'strike', true],
+  ['Stance change', 'trans', false], ['Stagger', 'stagger', false], ['Wounded', 'flinch', false],
+  ['Death', 'death', false], ['Bow', 'bow', false], ['Victory', 'victory', false],
+  ['Sidestep', 'sidestep', false], ['Backstep', 'backstep', false], ['Hit', 'hit', true], ['Jump', 'jump', false], ['Intro', 'intro', false],
+  ['Crouch', 'crouch', false], ['Chiburi', 'chiburi', false], ['Iai', 'iai', false], ['Yield', 'yield', false]];
+const SPEED = { idle: 200, walk: 100, guard: 140, trans: 90, strike: 75, stagger: 120, flinch: 100, death: 110, bow: 150, rise: 90, victory: 150,
+  sidestep: 70, backstep: 80, hit: 90, jump: 80, intro: 130, chiburi: 110, iai: 300, yield: 160, crouch: 200 };
+let group = 'idle', stance = 'mid';
+const animIndex = name => ANIMS.findIndex(a => a.name === name);
+function currentAnimName() {
+  if (group === 'trans') return 'trans_mh';
+  if (['idle', 'walk', 'guard', 'strike', 'hit'].includes(group)) return group + '_' + stance;
+  return group;
+}
+
+/* ---------------- rendering cache */
+const cache = {};
+function frames(char, name) {
+  const key = char + ':' + name;
+  if (!cache[key]) cache[key] = R.renderAnim(ANIMS[animIndex(name)], toSpec(char));
+  return cache[key];
+}
+function invalidate(char) { for (const k in cache) if (k.startsWith(char + ':')) delete cache[k]; }
+function toSpec(char) {   /* forearm and shin keep each fighter's own proportion to arm and leg */
+  const s = clone(chars[char]), d = DEFAULTS[char];
+  s.name = char; s.farm = s.uarm - (d.uarm - d.farm); s.shin = s.thigh - (d.thigh - d.shin);
+  return s;
+}
+
+const snap = v => ((v >> 3) << 3) | (v >> 5);
+function palRGBA(c) { return c.palette.map(p => [snap(p[0]), snap(p[1]), snap(p[2])]); }
+
+/* ---------------- drawing */
+const view = document.getElementById('view'), ctx = view.getContext('2d');
+const bgImg = new Image(); bgImg.src = BG;
+const sprite = document.createElement('canvas'); sprite.width = R.CW; sprite.height = R.CH;
+const sctx = sprite.getContext('2d');
+let viewMode = 'duel';
+
+function drawSprite(idx, pal, x, y, flip, scale = 1) {
+  const img = sctx.createImageData(R.CW, R.CH);
+  for (let i = 0; i < idx.length; i++) {
+    const v = idx[i]; if (!v) continue;
+    const c = pal[v], o = i * 4;
+    img.data[o] = c[0]; img.data[o + 1] = c[1]; img.data[o + 2] = c[2]; img.data[o + 3] = 255;
+  }
+  sctx.putImageData(img, 0, 0);
+  ctx.save();
+  ctx.imageSmoothingEnabled = false;
+  if (flip) { ctx.translate(x + R.CW * scale, y); ctx.scale(-1, 1); ctx.drawImage(sprite, 0, 0, R.CW * scale, R.CH * scale); }
+  else ctx.drawImage(sprite, x, y, R.CW * scale, R.CH * scale);
+  ctx.restore();
+}
+
+let fi = 0, playing = true, last = 0, hold = 0;
+function draw() {
+  const name = currentAnimName();
+  const fs = frames(cur, name);
+  if (fi >= fs.length) fi = fs.length - 1;
+  const other = cur === 'lieve' ? opp : 'lieve';
+  const both = document.getElementById('bothAnim').checked;
+  ctx.imageSmoothingEnabled = false;
+  if (viewMode === 'duel') {
+    view.width = 240; view.height = 160;
+    if (bgImg.complete) ctx.drawImage(bgImg, 0, 0); else { ctx.fillStyle = '#2a1d16'; ctx.fillRect(0, 0, 240, 160); }
+    const ofs = frames(other, both ? name : 'idle_mid');
+    const oframe = ofs[both ? Math.min(fi, ofs.length - 1) : Math.floor(performance.now() / 200) % ofs.length];
+    const place = (char, idx) => {
+      const isM = char === 'lieve', sx = isM ? 62 : 178;
+      drawSprite(idx, palRGBA(chars[char]), isM ? sx - R.RX : sx - (R.CW - R.RX), 152 - R.GY, !isM);
+    };
+    place(other, oframe);
+    place(cur, fs[fi]);
+  } else {
+    view.width = 192; view.height = 160;
+    ctx.drawImage(bgImg, 24, 0, 192, 160, 0, 0, 192, 160);
+    drawSprite(fs[fi], palRGBA(chars[cur]), 0, 0, false);
+    ctx.strokeStyle = 'rgba(242,194,92,.35)'; ctx.setLineDash([3, 3]); ctx.strokeRect(0.5, 0.5, 191, 159);
+  }
+  const slider = document.getElementById('frame');
+  slider.max = fs.length - 1; slider.value = fi;
+  document.getElementById('frameLbl').textContent = (fi + 1) + '/' + fs.length;
+}
+function tick(t) {
+  const name = currentAnimName(), fs = frames(cur, name);
+  const loop = ANIMS[animIndex(name)].loop;
+  const sp = SPEED[name.split('_')[0]] || 120;
+  if (playing && t - last > sp) {
+    last = t;
+    if (fi < fs.length - 1) fi++;
+    else if (loop) fi = 0;
+    else if (++hold > 900 / sp) { fi = 0; hold = 0; }
+  }
+  draw();
+  requestAnimationFrame(tick);
+}
+
+/* ---------------- clipping check (runs a moment after edits) */
+let clipTimer = null;
+function scheduleClip() {
+  clearTimeout(clipTimer);
+  clipTimer = setTimeout(() => {
+    const msgs = [];
+    for (const char of [...new Set(['lieve', cur])]) {
+      let n = 0;
+      for (const a of ANIMS) for (const f of frames(char, a.name)) {
+        let hit = false;
+        for (let y = 0; y < R.CH && !hit; y++) if (f[y * R.CW] || f[y * R.CW + R.CW - 1]) hit = true;
+        if (hit) n++;
+      }
+      if (n) msgs.push(`${NAMES[char]} goes past the side of the sprite area in ${n} frame${n > 1 ? 's' : ''}; those pixels will be cut off in the game. Try a shorter sword or a smaller height.`);
+    }
+    const w = document.getElementById('warn');
+    w.style.display = msgs.length ? 'block' : 'none';
+    w.textContent = msgs.join(' ');
+  }, 450);
+}
+
+/* ---------------- controls */
+const SLIDERS = [
+  ['scale', 'Height', 1.0, 1.5, 0.01], ['head_r', 'Head size', 5.6, 8.0, 0.1], ['torso', 'Torso length', 26, 34, 0.5],
+  ['uarm', 'Arm length', 13, 19, 0.5], ['thigh', 'Leg length', 20, 27, 0.5], ['build', 'Build', 0.6, 1.5, 0.01],
+  ['figure', 'Feminine figure', 0, 1, 0.05], ['chest', 'Chest', 0, 1, 0.05, 'lieve'], ['neck', 'Neck length', 2.6, 6.0, 0.1], ['upright', 'Upright posture', 0, 1, 0.05], ['chest_depth', 'Chest depth', 0.6, 1.1, 0.01], ['flare', 'Hakama flare', 0.7, 1.5, 0.05], ['blade', 'Weapon length', 12, 60, 1], ['staff_back', 'Staff behind the hands', 10, 32, 1, 'bo']];
+const COLOURS = [
+  ['Outline', [1]], ['Skin', [2, 3, 4]], ['Hair', [5, 6, 7]], ['Kimono top', [8, 9, 10]],
+  ['Hakama', [11, 12, 13]], ['Headband / blade edge', [14]], ['Blade', [15]]];
+const hex = p => '#' + p.map(v => v.toString(16).padStart(2, '0')).join('');
+const unhex = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
+
+function buildControls() {
+  const sl = document.getElementById('sliders'); sl.innerHTML = '';
+  for (const [key, label, mn, mx, st, only] of SLIDERS) {
+    const d = document.createElement('div'); d.className = 'slider';
+    if (only) d.dataset.only = only;
+    d.innerHTML = `<span>${label}</span><input type="range" min="${mn}" max="${mx}" step="${st}" data-key="${key}"><output></output>`;
+    sl.appendChild(d);
+  }
+  const co = document.getElementById('colours'); co.innerHTML = '';
+  for (const [label, ids] of COLOURS) {
+    const d = document.createElement('div'); d.className = 'colrow';
+    const tones = ids.length === 3 ? ['shadow', 'mid', 'light'] : [''];
+    d.innerHTML = `<span>${label}</span><div class="sw">${ids.map((id, k) =>
+      `<label title="${label} ${tones[k]}"><input type="color" data-pal="${id}"><small>${tones[k] ? tones[k][0].toUpperCase() : ''}</small></label>`).join('')}</div>` +
+      (ids.length === 3 ? `<button class="act" data-auto="${ids.join(',')}">Auto</button>` : '<span></span>');
+    co.appendChild(d);
+  }
+  document.querySelectorAll('[data-key]').forEach(inp => inp.addEventListener('input', () => {
+    chars[cur][inp.dataset.key] = parseFloat(inp.value); changed();
+  }));
+  document.querySelectorAll('[data-pal]').forEach(inp => inp.addEventListener('input', () => {
+    chars[cur].palette[+inp.dataset.pal] = unhex(inp.value); changed(false);
+  }));
+  document.querySelectorAll('[data-auto]').forEach(b => b.addEventListener('click', () => {
+    const ids = b.dataset.auto.split(',').map(Number);
+    const mid = chars[cur].palette[ids[1]];
+    chars[cur].palette[ids[0]] = shade(mid, 0.62, -0.025);
+    chars[cur].palette[ids[2]] = shade(mid, 1.28, 0.025);
+    changed(false);
+  }));
+}
+function shade(rgb, k, hueShift) {
+  // darker tones lean slightly cool, lighter tones slightly warm (classic pixel-art ramp)
+  let [r, g, b] = rgb.map(v => v / 255);
+  const mx = Math.max(r, g, b), mn = Math.min(r, g, b); let h = 0, s = 0, l = (mx + mn) / 2;
+  if (mx !== mn) { const d = mx - mn; s = l > .5 ? d / (2 - mx - mn) : d / (mx + mn);
+    h = mx === r ? (g - b) / d + (g < b ? 6 : 0) : mx === g ? (b - r) / d + 2 : (r - g) / d + 4; h /= 6; }
+  h = (h + hueShift + 1) % 1; l = Math.min(0.96, Math.max(0.04, l * k)); s = Math.min(1, s * (k > 1 ? 0.92 : 1.08));
+  const f = (n) => { const kk = (n + h * 12) % 12, a = s * Math.min(l, 1 - l); return l - a * Math.max(-1, Math.min(kk - 3, 9 - kk, 1)); };
+  return [f(0), f(8), f(4)].map(v => Math.round(v * 255));
+}
+
+function syncControls() {
+  const c = chars[cur];
+  document.querySelectorAll('[data-only]').forEach(r => r.style.display = (r.dataset.only === cur || r.dataset.only === (c.weapon || 'katana')) ? '' : 'none');
+  document.querySelectorAll('[data-flag]').forEach(b => b.checked = !!c[b.dataset.flag]);
+  document.querySelectorAll('[data-key]').forEach(inp => {
+    if (c[inp.dataset.key] === undefined) c[inp.dataset.key] = inp.dataset.key === 'chest_depth' ? 1 : inp.dataset.key === 'staff_back' ? 22 : 0;
+    inp.value = c[inp.dataset.key];
+    const st = +inp.step; inp.nextElementSibling.textContent = (+c[inp.dataset.key]).toFixed(st >= 1 ? 0 : st >= 0.1 ? 1 : 2);
+  });
+  document.querySelectorAll('[data-pal]').forEach(inp => {
+    const p = c.palette[+inp.dataset.pal].map(snap);
+    inp.value = hex(c.palette[+inp.dataset.pal]);
+    inp.parentElement.style.background = hex(p);
+  });
+  document.getElementById('hair').value = c.hair;
+  document.getElementById('headband').checked = !!c.headband;
+  const tl = document.getElementById('tail_len'); tl.value = c.tail_len; tl.nextElementSibling.textContent = (+c.tail_len).toFixed(1);
+  document.getElementById('tailRow').style.display = ['ponytail', 'long', 'flowing', 'highpony', 'braid', 'halfup', 'lowpony'].includes(c.hair) ? '' : 'none';
+  document.getElementById('bangs').checked = !!c.bangs;
+  document.getElementById('sidelocks').checked = !!c.sidelocks;
+  document.getElementById('eyes').checked = (c.eyes || 0) === 1;
+  document.getElementById('lips').checked = !!c.lips;
+  document.getElementById('vneck').checked = !!c.vneck;
+  document.getElementById('obi').value = String(c.obi || 0);
+  document.getElementById('weapon').value = c.weapon || 'katana';
+  document.getElementById('presetBox').style.display = cur === 'lieve' ? '' : 'none';
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('on', t.dataset.char === cur));
+  document.getElementById('out').value = exportText();
+}
+
+function exportText() {
+  const o = {};
+  for (const k of ALL) {
+    const s = toSpec(k);
+    o[k] = {};
+    for (const f of ['scale', 'torso', 'neck', 'head_r', 'uarm', 'farm', 'thigh', 'shin', 'blade', 'build', 'hair', 'headband', 'tail_len', 'flare', 'chest', 'figure', 'bangs', 'sidelocks', 'eyes', 'lips', 'obi', 'upright', 'chest_depth', 'vneck', 'weapon',
+                     'staff_back', 'ears', 'helm', 'menpo', 'hood', 'sode', 'lames', 'kusazuri', 'gauntlets', 'kesa', 'bare_arms',
+                     'torn', 'stripes', 'knitcap', 'hat', 'ruff', 'beard', 'pistol'])
+      if (s[f] !== undefined) o[k][f] = typeof s[f] === 'number' ? Math.round(s[f] * 100) / 100 : s[f];
+    o[k].palette = s.palette;
+  }
+  return 'KOMO CHARACTERS v1\n' + JSON.stringify(o);
+}
+
+function changed(geometry = true) {
+  if (geometry) invalidate(cur);
+  try { localStorage.setItem('komo-chars-draft', JSON.stringify(chars)); } catch (e) {}
+  syncControls();
+  if (geometry) scheduleClip();
+}
+
+document.getElementById('hair').addEventListener('change', e => { chars[cur].hair = e.target.value; changed(); });
+document.getElementById('headband').addEventListener('change', e => { chars[cur].headband = e.target.checked; changed(); });
+for (const id of ['bangs', 'sidelocks', 'lips', 'vneck']) document.getElementById(id).addEventListener('change', e => { chars[cur][id] = e.target.checked; changed(); });
+document.getElementById('eyes').addEventListener('change', e => { chars[cur].eyes = e.target.checked ? 1 : 0; changed(); });
+document.getElementById('obi').addEventListener('change', e => { chars[cur].obi = +e.target.value; changed(); });
+document.getElementById('weapon').addEventListener('change', e => { chars[cur].weapon = e.target.value; changed(); });
+document.querySelectorAll('[data-flag]').forEach(b => b.addEventListener('change', () => { chars[cur][b.dataset.flag] = b.checked; changed(); }));
+const PRESETS = [["RONIN ROSE", {"scale": 1.16, "torso": 30, "neck": 5.0, "head_r": 6.4, "uarm": 16, "farm": 15, "thigh": 24.5, "shin": 24.5, "blade": 42, "build": 0.68, "chest": 0.4, "figure": 0.7, "eyes": 1, "lips": true, "headband": false, "upright": 1, "chest_depth": 0.8, "vneck": true, "bangs": true, "sidelocks": false, "obi": 1, "flare": 1.0, "hair": "highpony", "tail_len": 7.5, "palette": [[0, 0, 0], [24, 14, 20], [150, 84, 64], [212, 144, 108], [248, 202, 162], [120, 20, 16], [196, 44, 28], [244, 104, 60], [126, 122, 136], [198, 194, 200], [248, 246, 240], [26, 30, 62], [46, 56, 104], [82, 98, 156], [240, 244, 252], [150, 160, 180]]}], ["RIVER SILK", {"scale": 1.16, "torso": 30, "neck": 5.0, "head_r": 6.4, "uarm": 16, "farm": 15, "thigh": 24.5, "shin": 24.5, "blade": 42, "build": 0.68, "chest": 0.4, "figure": 0.7, "eyes": 1, "lips": true, "headband": false, "upright": 1, "chest_depth": 0.8, "vneck": true, "bangs": false, "sidelocks": true, "obi": 2, "flare": 1.1, "hair": "flowing", "tail_len": 7.0, "palette": [[0, 0, 0], [24, 14, 20], [150, 84, 64], [212, 144, 108], [248, 202, 162], [110, 34, 18], [186, 70, 34], [236, 128, 70], [126, 122, 136], [198, 194, 200], [248, 246, 240], [24, 30, 70], [44, 60, 120], [86, 110, 176], [240, 244, 252], [150, 160, 180]]}], ["LANTERN BRAID", {"scale": 1.16, "torso": 30, "neck": 5.0, "head_r": 6.4, "uarm": 16, "farm": 15, "thigh": 24.5, "shin": 24.5, "blade": 42, "build": 0.68, "chest": 0.4, "figure": 0.7, "eyes": 1, "lips": true, "headband": false, "upright": 1, "chest_depth": 0.8, "vneck": true, "bangs": true, "sidelocks": false, "obi": 1, "flare": 1.0, "hair": "braid", "tail_len": 5.5, "palette": [[0, 0, 0], [24, 14, 20], [150, 84, 64], [212, 144, 108], [248, 202, 162], [130, 24, 12], [214, 60, 26], [252, 130, 60], [126, 122, 136], [198, 194, 200], [248, 246, 240], [20, 32, 72], [40, 62, 128], [76, 108, 180], [240, 244, 252], [150, 160, 180]]}], ["STORM CRANE", {"scale": 1.16, "torso": 30, "neck": 5.0, "head_r": 6.4, "uarm": 16, "farm": 15, "thigh": 24.5, "shin": 24.5, "blade": 42, "build": 0.68, "chest": 0.4, "figure": 0.7, "eyes": 1, "lips": true, "headband": true, "upright": 1, "chest_depth": 0.8, "vneck": true, "bangs": false, "sidelocks": true, "obi": 0, "flare": 1.0, "hair": "halfup", "tail_len": 6.5, "palette": [[0, 0, 0], [24, 14, 20], [150, 84, 64], [212, 144, 108], [248, 202, 162], [100, 18, 16], [170, 40, 30], [226, 86, 60], [126, 122, 136], [198, 194, 200], [248, 246, 240], [30, 38, 66], [56, 70, 112], [96, 116, 160], [240, 244, 252], [150, 160, 180]]}], ["DUTCH HEART", {"scale": 1.16, "torso": 30, "neck": 5.0, "head_r": 6.4, "uarm": 16, "farm": 15, "thigh": 24.5, "shin": 24.5, "blade": 42, "build": 0.68, "chest": 0.4, "figure": 0.7, "eyes": 1, "lips": true, "headband": false, "upright": 1, "chest_depth": 0.8, "vneck": true, "bangs": true, "sidelocks": true, "obi": 1, "flare": 1.0, "hair": "lowpony", "tail_len": 7.5, "palette": [[0, 0, 0], [24, 14, 20], [168, 104, 84], [226, 164, 132], [252, 214, 184], [140, 44, 18], [224, 92, 40], [252, 156, 84], [126, 122, 136], [198, 194, 200], [248, 246, 240], [30, 44, 88], [56, 84, 148], [104, 136, 200], [240, 244, 252], [150, 160, 180]]}]];
+const presetRow = document.getElementById('presets');
+[['IN THE ROM', null], ...PRESETS].forEach(([name, spec], k) => {
+  const b = document.createElement('button'); b.className = 'chip small';
+  b.textContent = k === 0 ? 'Current' : k + '. ' + name.split(' ').map(w => w[0] + w.slice(1).toLowerCase()).join(' ');
+  b.addEventListener('click', () => {
+    chars.lieve = spec ? Object.assign(clone(DEFAULTS.lieve), clone(spec)) : clone(DEFAULTS.lieve);
+    cur = 'lieve'; fi = 0; invalidate('lieve'); changed();
+    presetRow.querySelectorAll('.chip').forEach(c => c.classList.toggle('on', c === b));
+  });
+  presetRow.appendChild(b);
+});
+document.getElementById('tail_len').addEventListener('input', e => { chars[cur].tail_len = parseFloat(e.target.value); changed(); });
+document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => { cur = t.dataset.char; if (cur !== 'lieve') opp = cur; fi = 0; syncControls(); scheduleClip(); }));
+document.getElementById('resetChar').addEventListener('click', () => { chars[cur] = clone(DEFAULTS[cur]); changed(); });
+document.getElementById('resetAll').addEventListener('click', () => { chars = clone(DEFAULTS); ALL.forEach(invalidate); changed(); });
+document.getElementById('mirror').addEventListener('click', () => {
+  const o = cur === 'lieve' ? opp : 'lieve';
+  for (const k of ['scale', 'head_r', 'torso', 'uarm', 'thigh', 'build', 'flare', 'blade', 'hair', 'headband', 'tail_len']) chars[o][k] = chars[cur][k];
+  invalidate(o); changed();
+});
+document.getElementById('copy').addEventListener('click', async () => {
+  const st = document.getElementById('copyStatus');
+  try { await navigator.clipboard.writeText(exportText()); st.textContent = 'Copied. Paste it into the chat.'; }
+  catch (e) { const t = document.getElementById('out'); t.focus(); t.select(); st.textContent = 'Copying is blocked here: the text below is selected, copy it by hand.'; }
+});
+document.getElementById('load').addEventListener('click', () => {
+  const st = document.getElementById('loadStatus');
+  try {
+    const txt = document.getElementById('in').value.replace(/^KOMO CHARACTERS v1\s*/, '');
+    const d = JSON.parse(txt);
+    let n = 0;
+    for (const k of ALL) {
+      if (!d[k]) continue;
+      if (!Array.isArray(d[k].palette) || d[k].palette.length !== 16) throw new Error('bad ' + k);
+      chars[k] = Object.assign(clone(DEFAULTS[k]), d[k]); n++;
+    }
+    if (!n) throw new Error('empty');
+    ALL.forEach(invalidate); changed(); st.textContent = 'Loaded.';
+  } catch (e) { st.textContent = "That doesn't look like Kōmō settings."; }
+});
+
+/* animation chips */
+const chipRow = document.getElementById('animChips');
+for (const [label, g, st] of GROUPS) {
+  const b = document.createElement('button'); b.className = 'chip' + (g === group ? ' on' : ''); b.textContent = label;
+  b.addEventListener('click', () => { group = g; fi = 0; hold = 0;
+    chipRow.querySelectorAll('.chip').forEach(c => c.classList.toggle('on', c === b));
+    document.getElementById('stanceRow').style.visibility = st ? 'visible' : 'hidden'; });
+  chipRow.appendChild(b);
+}
+const stRow = document.getElementById('stanceRow');
+for (const s of ['low', 'mid', 'high']) {
+  const b = document.createElement('button'); b.className = 'chip small' + (s === stance ? ' on' : ''); b.textContent = s[0].toUpperCase() + s.slice(1);
+  b.addEventListener('click', () => { stance = s; fi = 0; stRow.querySelectorAll('.chip').forEach(c => c.classList.toggle('on', c === b)); });
+  stRow.appendChild(b);
+}
+document.querySelectorAll('[data-view]').forEach(b => b.addEventListener('click', () => {
+  viewMode = b.dataset.view; document.querySelectorAll('[data-view]').forEach(c => c.classList.toggle('on', c === b));
+}));
+document.getElementById('play').addEventListener('click', e => { playing = !playing; e.target.textContent = playing ? 'Pause' : 'Play'; });
+document.getElementById('frame').addEventListener('input', e => { fi = +e.target.value; playing = false; document.getElementById('play').textContent = 'Play'; });
+
+buildControls();
+syncControls();
+scheduleClip();
+requestAnimationFrame(tick);
+</script>
+</body>
+</html>

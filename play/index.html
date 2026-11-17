@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kōmō: play in your browser</title>
+<meta name="description" content="Kōmō, a Game Boy Advance duelling game set in Nagasaki, 1651. Play it in your browser.">
+<style>
+  :root { --ink: #f1e6d2; --dim: #b3a58f; --red: #c0392b; --gold: #e6b450; --bg: #12100f; --panel: #1c1917; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.5 Georgia, "Times New Roman", serif; }
+  header { text-align: center; padding: 28px 16px 8px; }
+  h1 { margin: 0; font-size: 44px; letter-spacing: 6px; color: var(--red); text-shadow: 2px 2px 0 #000; }
+  h1 small { display: block; font-size: 15px; letter-spacing: 3px; color: var(--dim); text-shadow: none; margin-top: 4px; }
+  main { max-width: 980px; margin: 0 auto; padding: 8px 16px 40px; }
+  #frame { width: 100%; max-width: 960px; aspect-ratio: 3 / 2; margin: 12px auto; background: #000; border: 2px solid #3a2f28; }
+  #game { width: 100%; height: 100%; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-top: 18px; }
+  .card { background: var(--panel); border: 1px solid #2c2622; padding: 14px 18px; border-radius: 4px; }
+  .card h2 { margin: 0 0 8px; font-size: 18px; color: var(--gold); letter-spacing: 1px; }
+  table { border-collapse: collapse; width: 100%; font-size: 15px; }
+  td { padding: 3px 6px; border-bottom: 1px solid #2c2622; vertical-align: top; }
+  td:first-child { color: var(--gold); white-space: nowrap; }
+  a { color: var(--gold); }
+  .note { color: var(--dim); font-size: 14px; }
+  footer { text-align: center; color: var(--dim); font-size: 13px; padding: 18px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>KŌMŌ<small>紅毛 · NAGASAKI, 1651</small></h1>
+</header>
+<main>
+  <div id="frame"><div id="game"></div></div>
+  <p class="note" style="text-align:center">Click the player to start. Your climb is saved in this browser.
+     The <b>gamepad icon</b> in the player's bar shows and changes the keys; a USB or Bluetooth controller works too.
+     On a phone, on-screen buttons appear.</p>
+
+  <div class="grid">
+    <div class="card">
+      <h2>How to fight</h2>
+      <table>
+        <tr><td>A</td><td>Cut. A A A chains three cuts. In a bind, tap A to push.</td></tr>
+        <tr><td>Up, then A</td><td>High cut</td></tr>
+        <tr><td>Down + A</td><td>Low cut</td></tr>
+        <tr><td>B (hold)</td><td>Guard: Up+B high, B mid, Down+B low. Press it just as a cut lands to parry.</td></tr>
+        <tr><td>Up</td><td>Jump: low and mid cuts pass under</td></tr>
+        <tr><td>Down (hold)</td><td>Crouch: high cuts pass over</td></tr>
+        <tr><td>L / R</td><td>Step one plane back / forward (seven planes)</td></tr>
+        <tr><td>◀◀ / ▶▶</td><td>Dodge / dash</td></tr>
+        <tr><td>A + B</td><td>Quick Draw, when the ki bar is full</td></tr>
+        <tr><td>Start</td><td>Pause</td></tr>
+      </table>
+    </div>
+    <div class="card">
+      <h2>The story</h2>
+      <p>A giant in black armour killed Pieter de Vries, the finest trader the Dutch company ever sent east.
+         His daughter Lieve, red-haired and forbidden to set foot in Japan, follows the killer up a
+         five-storey pagoda. Each floor is held by a master of a different fighting style.</p>
+      <p>Bow, spare, or show no mercy: honour decides who helps her, who comes back for revenge, and how it ends.</p>
+      <p><a href="designer.html">Open the character designer</a> · <a href="komo.gba" download>Download the ROM</a></p>
+    </div>
+  </div>
+</main>
+<footer>
+  Kōmō by Bezoon. Played here with <a href="https://emulatorjs.org/">EmulatorJS</a> and the mGBA core (loaded from the EmulatorJS CDN).
+</footer>
+<script>
+  EJS_player = '#game';
+  EJS_core = 'gba';                 // the mGBA core
+  EJS_gameUrl = 'komo.gba';
+  EJS_gameName = 'Komo';            // the name used for saves and save states
+  EJS_color = '#c0392b';
+  EJS_pathtodata = 'https://cdn.emulatorjs.org/stable/data/';
+</script>
+<script src="https://cdn.emulatorjs.org/stable/data/loader.js"></script>
+</body>
+</html>

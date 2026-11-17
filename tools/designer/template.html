@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kōmō character designer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #15100f; --panel: #1f1816; --panel2: #2a211e; --line: #3b2f2a;
+    --paper: #efe6d6; --muted: #b3a593; --red: #c8341f; --red2: #e2532f; --gold: #f2c25c;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--ink); color: var(--paper); font: 14px/1.45 Inter, system-ui, sans-serif; }
+  header { display: flex; align-items: center; gap: 14px; padding: 16px 24px; border-bottom: 1px solid var(--line); }
+  .seal { width: 34px; height: 48px; background: var(--red); color: var(--paper); border-radius: 3px;
+    font: 800 17px/20px "Shippori Mincho", serif; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  h1 { margin: 0; font: 800 26px "Shippori Mincho", serif; letter-spacing: .04em; }
+  h1 small { display: block; font: 500 13px Inter, sans-serif; color: var(--muted); letter-spacing: 0; }
+  main { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 20px; padding: 20px 24px 40px; max-width: 1280px; margin: 0 auto; }
+  @media (max-width: 960px) { main { grid-template-columns: 1fr; } }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; }
+  .stage { position: relative; background: #000; border-radius: 6px; overflow: hidden; }
+  canvas#view { display: block; width: 100%; image-rendering: pixelated; image-rendering: crisp-edges; }
+  .warn { margin-top: 10px; padding: 8px 10px; border-radius: 6px; background: #4a1d14; color: #ffd2c4; font-size: 13px; display: none; }
+  .row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .chip { background: var(--panel2); border: 1px solid var(--line); color: var(--paper); border-radius: 999px; padding: 5px 11px; cursor: pointer; font: 500 13px Inter, sans-serif; }
+  .chip:hover { border-color: #6b5549; }
+  .chip.on { background: var(--red); border-color: var(--red2); }
+  .chip.small { padding: 3px 9px; font-size: 12px; }
+  .lbl { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .08em; margin: 14px 0 6px; }
+  .controls { display: grid; gap: 10px; margin-top: 12px; }
+  .tabs { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-bottom: 6px; }
+  .tab { padding: 9px; text-align: center; border-radius: 8px; border: 1px solid var(--line); background: var(--panel2); cursor: pointer; font: 700 16px "Shippori Mincho", serif; color: var(--paper); }
+  .tab.on { border-color: var(--gold); box-shadow: inset 0 -3px 0 var(--gold); }
+  details { border-top: 1px solid var(--line); padding: 4px 0; }
+  details[open] { padding-bottom: 10px; }
+  summary { cursor: pointer; list-style: none; padding: 10px 0 6px; font: 700 15px "Shippori Mincho", serif; display: flex; justify-content: space-between; }
+  summary::after { content: "+"; color: var(--muted); font-family: Inter; }
+  details[open] summary::after { content: "–"; }
+  .slider { display: grid; grid-template-columns: 112px 1fr 44px; gap: 8px; align-items: center; margin: 6px 0; }
+  .slider span:first-child { color: var(--muted); }
+  .slider output { font: 500 12px "JetBrains Mono", monospace; text-align: right; color: var(--gold); }
+  input[type=range] { width: 100%; accent-color: var(--red2); }
+  select { width: 100%; background: var(--panel2); color: var(--paper); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; font: 14px Inter, sans-serif; }
+  .colrow { display: grid; grid-template-columns: 112px 1fr auto; gap: 8px; align-items: center; margin: 7px 0; }
+  .colrow span { color: var(--muted); }
+  .sw { display: flex; gap: 5px; }
+  .sw label { position: relative; width: 34px; height: 26px; border-radius: 5px; border: 1px solid #00000080; overflow: hidden; cursor: pointer; box-shadow: inset 0 0 0 1px #ffffff22; }
+  .sw input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+  .sw small { position: absolute; bottom: -1px; left: 2px; font-size: 9px; color: #fff; text-shadow: 0 0 2px #000; pointer-events: none; }
+  button.act { background: var(--panel2); border: 1px solid var(--line); color: var(--paper); border-radius: 6px; padding: 6px 10px; cursor: pointer; font: 500 12px Inter, sans-serif; }
+  button.act:hover { border-color: #6b5549; }
+  button.primary { background: var(--red); border-color: var(--red2); font-weight: 600; padding: 9px 14px; font-size: 14px; }
+  .toggle { display: flex; align-items: center; gap: 8px; color: var(--paper); cursor: pointer; margin: 6px 0; }
+  .toggle input { accent-color: var(--red2); width: 16px; height: 16px; }
+  textarea { width: 100%; height: 120px; background: #0f0b0a; color: #d9cbb6; border: 1px solid var(--line); border-radius: 6px; padding: 8px; font: 11px/1.4 "JetBrains Mono", monospace; resize: vertical; }
+  .note { color: var(--muted); font-size: 12px; margin: 6px 0 0; }
+  .export { grid-column: 1 / -1; }
+  .exp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 760px) { .exp-grid { grid-template-columns: 1fr; } }
+  .status { font-size: 12px; color: var(--gold); min-height: 1em; margin-left: 8px; }
+  .scrub { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; }
+  .mono { font: 500 12px "JetBrains Mono", monospace; color: var(--muted); }
+</style>
+</head>
+<body>
+<header>
+  <div class="seal"><span>紅</span><span>毛</span></div>
+  <h1>Kōmō <small>Character designer: change the fighters, then copy the settings back into the chat</small></h1>
+</header>
+<main>
+  <section>
+    <div class="card">
+      <div class="stage"><canvas id="view" width="240" height="160"></canvas></div>
+      <div id="warn" class="warn"></div>
+      <div class="controls">
+        <div>
+          <div class="lbl">Animation</div>
+          <div class="row" id="animChips"></div>
+        </div>
+        <div class="row" id="stanceRow">
+          <span class="mono" style="margin-right:4px">Stance</span>
+        </div>
+        <div class="scrub">
+          <button class="act" id="play">Pause</button>
+          <input type="range" id="frame" min="0" max="0" value="0">
+          <span class="mono" id="frameLbl">1/1</span>
+        </div>
+        <div class="row">
+          <span class="mono" style="margin-right:4px">View</span>
+          <button class="chip small on" data-view="duel">Duel</button>
+          <button class="chip small" data-view="close">Close-up</button>
+          <label class="toggle" style="margin-left:12px"><input type="checkbox" id="bothAnim"> Both fighters play it</label>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <aside class="card">
+    <div class="tabs">
+      <button class="tab on" data-char="lieve">Lieve</button>
+      <button class="tab" data-char="kenji">Kenji</button>
+      <button class="tab" data-char="hozen">Hōzen</button>
+      <button class="tab" data-char="gonzo">Gonzō</button>
+      <button class="tab" data-char="kagero">Kagerō</button>
+      <button class="tab" data-char="kurogane">Kurogane</button>
+      <button class="tab" data-char="sailor">Sailor</button>
+      <button class="tab" data-char="morsel">Morsel</button>
+    </div>
+    <div id="presetBox">
+      <div class="lbl">Lieve designs</div>
+      <div class="row" id="presets"></div>
+    </div>
+
+    <details open>
+      <summary>Hair and headband</summary>
+      <div class="slider"><span>Hair style</span>
+        <select id="hair" style="grid-column: 2 / 4">
+          <option value="ponytail">Ponytail</option>
+          <option value="highpony">High ponytail with ribbon</option>
+          <option value="lowpony">Low ponytail with ribbon</option>
+          <option value="flowing">Long, flowing</option>
+          <option value="braid">Long braid</option>
+          <option value="halfup">Half-up with bun</option>
+          <option value="long">Long, loose (classic)</option>
+          <option value="bun">Bun</option>
+          <option value="topknot">Topknot (chonmage)</option>
+          <option value="short">Short</option>
+          <option value="bald">Shaved</option>
+        </select>
+      </div>
+      <div class="slider" id="tailRow"><span>Hair length</span><input type="range" id="tail_len" min="3" max="9" step="0.1"><output></output></div>
+      <label class="toggle"><input type="checkbox" id="headband"> Headband (uses the "Headband / blade edge" colour)</label>
+      <label class="toggle"><input type="checkbox" id="bangs"> Fringe</label>
+      <label class="toggle"><input type="checkbox" id="sidelocks"> Side locks framing the face</label>
+    </details>
+
+    <details open>
+      <summary>Face and outfit</summary>
+      <label class="toggle"><input type="checkbox" id="eyes"> Eye with lashes</label>
+      <label class="toggle"><input type="checkbox" id="lips"> Red lips (uses the hair colour)</label>
+      <label class="toggle"><input type="checkbox" id="vneck"> V collar showing the throat</label>
+      <label class="toggle"><input type="checkbox" data-flag="ears"> Ears (shown when the head is uncovered)</label>
+      <div class="slider"><span>Sash</span>
+        <select id="obi" style="grid-column: 2 / 4">
+          <option value="0">Same as hakama</option>
+          <option value="1">Red (hair colour)</option>
+          <option value="2">White (kimono colour)</option>
+          <option value="3">None</option>
+        </select>
+      </div>
+      <div class="slider"><span>Weapon</span>
+        <select id="weapon" style="grid-column: 2 / 4">
+          <option value="katana">Katana (steel)</option>
+          <option value="bokken">Bokken (wooden)</option>
+          <option value="bo">Bō staff</option>
+          <option value="dual">Two swords</option>
+          <option value="knives">Two knives</option>
+          <option value="nodachi">Nōdachi (great sword)</option>
+          <option value="kusarigama">Sickle and chain</option>
+          <option value="rapier">Rapier</option>
+          <option value="cutlass">Cutlass</option>
+        </select>
+      </div>
+    </details>
+    <details>
+      <summary>Armour and costume</summary>
+      <label class="toggle"><input type="checkbox" data-flag="helm"> Kabuto helmet with horns and neck guard</label>
+      <label class="toggle"><input type="checkbox" data-flag="menpo"> Red face mask with moustache</label>
+      <label class="toggle"><input type="checkbox" data-flag="hood"> Ninja hood, open at the eyes</label>
+      <label class="toggle"><input type="checkbox" data-flag="sode"> Shoulder plates</label>
+      <label class="toggle"><input type="checkbox" data-flag="lames"> Lacquered chest plates</label>
+      <label class="toggle"><input type="checkbox" data-flag="kusazuri"> Armour skirt</label>
+      <label class="toggle"><input type="checkbox" data-flag="gauntlets"> Armoured forearms</label>
+      <label class="toggle"><input type="checkbox" data-flag="kesa"> Monk's stole and prayer beads</label>
+      <label class="toggle"><input type="checkbox" data-flag="bare_arms"> Bare arms</label>
+      <label class="toggle"><input type="checkbox" data-flag="torn"> Torn sleeves and cut jacket</label>
+      <label class="toggle"><input type="checkbox" data-flag="stripes"> Striped shirt</label>
+      <label class="toggle"><input type="checkbox" data-flag="knitcap"> Wool cap</label>
+      <label class="toggle"><input type="checkbox" data-flag="hat"> Dutch hat</label>
+      <label class="toggle"><input type="checkbox" data-flag="ruff"> White ruff collar</label>
+      <label class="toggle"><input type="checkbox" data-flag="beard"> Moustache and beard</label>
+      <label class="toggle"><input type="checkbox" data-flag="pistol"> Flintlock pistol (with the rapier)</label>
+    </details>
+
+    <details open>
+      <summary>Body</summary>
+      <div id="sliders"></div>
+    </details>
+
+    <details open>
+      <summary>Colours</summary>
+      <div id="colours"></div>
+      <p class="note">Swatches show the colour as the GBA will display it (32 levels per channel). "Auto" makes the shadow and highlight from the middle colour.</p>
+    </details>
+
+    <div class="row" style="margin-top:10px">
+      <button class="act" id="resetChar">Reset this fighter to the ROM</button>
+      <button class="act" id="mirror">Copy look to the other fighter</button>
+    </div>
+  </aside>
+
+  <section class="card export">
+    <div class="exp-grid">
+      <div>
+        <div class="lbl" style="margin-top:0">Send your design</div>
+        <div class="row"><button class="act primary" id="copy">Copy settings</button><span class="status" id="copyStatus"></span></div>
+        <p class="note">Paste the copied settings into the chat and the ROM gets rebuilt with your fighters. The text below is the same settings, if copying is blocked.</p>
+        <textarea id="out" readonly></textarea>
+      </div>
+      <div>
+        <div class="lbl" style="margin-top:0">Load settings</div>
+        <textarea id="in" placeholder="Paste settings here to keep editing a saved design"></textarea>
+        <div class="row" style="margin-top:6px"><button class="act" id="load">Load</button><button class="act" id="resetAll">Reset everyone to what's in the ROM</button><span class="status" id="loadStatus"></span></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
+/*RENDER_JS*/
+</script>
+<script>
+const ANIMS = /*ANIMS*/;
+const DEFAULTS = /*DEFAULTS*/;
+const BG = "data:image/png;base64,/*BG*/";
+const R = KomoRender;
+const clone = o => JSON.parse(JSON.stringify(o));
+
+let chars = clone(DEFAULTS);
+const NAMES = { lieve: 'Lieve', kenji: 'Kenji', hozen: 'Hōzen', gonzo: 'Gonzō', kagero: 'Kagerō', kurogane: 'Kurogane', sailor: 'Sailor', morsel: 'Morsel' };
+const ALL = Object.keys(NAMES);
+try { const s = localStorage.getItem('komo-chars-draft'); if (s) { const d = JSON.parse(s); for (const k of ALL) if (d[k] && Array.isArray(d[k].palette)) chars[k] = Object.assign(clone(DEFAULTS[k]), d[k]); } } catch (e) {}
+let cur = 'lieve', opp = 'kenji';     /* opp: the master shown facing Lieve */
+
+/* ---------------- animation catalogue */
+const GROUPS = [
+  ['Idle', 'idle', true], ['Walk', 'walk', true], ['Guard', 'guard', true], ['Strike', 'strike', true],
+  ['Stance change', 'trans', false], ['Stagger', 'stagger', false], ['Wounded', 'flinch', false],
+  ['Death', 'death', false], ['Bow', 'bow', false], ['Victory', 'victory', false],
+  ['Sidestep', 'sidestep', false], ['Backstep', 'backstep', false], ['Hit', 'hit', true], ['Jump', 'jump', false], ['Intro', 'intro', false],
+  ['Crouch', 'crouch', false], ['Chiburi', 'chiburi', false], ['Iai', 'iai', false], ['Yield', 'yield', false]];
+const SPEED = { idle: 200, walk: 100, guard: 140, trans: 90, strike: 75, stagger: 120, flinch: 100, death: 110, bow: 150, rise: 90, victory: 150,
+  sidestep: 70, backstep: 80, hit: 90, jump: 80, intro: 130, chiburi: 110, iai: 300, yield: 160, crouch: 200 };
+let group = 'idle', stance = 'mid';
+const animIndex = name => ANIMS.findIndex(a => a.name === name);
+function currentAnimName() {
+  if (group === 'trans') return 'trans_mh';
+  if (['idle', 'walk', 'guard', 'strike', 'hit'].includes(group)) return group + '_' + stance;
+  return group;
+}
+
+/* ---------------- rendering cache */
+const cache = {};
+function frames(char, name) {
+  const key = char + ':' + name;
+  if (!cache[key]) cache[key] = R.renderAnim(ANIMS[animIndex(name)], toSpec(char));
+  return cache[key];
+}
+function invalidate(char) { for (const k in cache) if (k.startsWith(char + ':')) delete cache[k]; }
+function toSpec(char) {   /* forearm and shin keep each fighter's own proportion to arm and leg */
+  const s = clone(chars[char]), d = DEFAULTS[char];
+  s.name = char; s.farm = s.uarm - (d.uarm - d.farm); s.shin = s.thigh - (d.thigh - d.shin);
+  return s;
+}
+
+const snap = v => ((v >> 3) << 3) | (v >> 5);
+function palRGBA(c) { return c.palette.map(p => [snap(p[0]), snap(p[1]), snap(p[2])]); }
+
+/* ---------------- drawing */
+const view = document.getElementById('view'), ctx = view.getContext('2d');
+const bgImg = new Image(); bgImg.src = BG;
+const sprite = document.createElement('canvas'); sprite.width = R.CW; sprite.height = R.CH;
+const sctx = sprite.getContext('2d');
+let viewMode = 'duel';
+
+function drawSprite(idx, pal, x, y, flip, scale = 1) {
+  const img = sctx.createImageData(R.CW, R.CH);
+  for (let i = 0; i < idx.length; i++) {
+    const v = idx[i]; if (!v) continue;
+    const c = pal[v], o = i * 4;
+    img.data[o] = c[0]; img.data[o + 1] = c[1]; img.data[o + 2] = c[2]; img.data[o + 3] = 255;
+  }
+  sctx.putImageData(img, 0, 0);
+  ctx.save();
+  ctx.imageSmoothingEnabled = false;
+  if (flip) { ctx.translate(x + R.CW * scale, y); ctx.scale(-1, 1); ctx.drawImage(sprite, 0, 0, R.CW * scale, R.CH * scale); }
+  else ctx.drawImage(sprite, x, y, R.CW * scale, R.CH * scale);
+  ctx.restore();
+}
+
+let fi = 0, playing = true, last = 0, hold = 0;
+function draw() {
+  const name = currentAnimName();
+  const fs = frames(cur, name);
+  if (fi >= fs.length) fi = fs.length - 1;
+  const other = cur === 'lieve' ? opp : 'lieve';
+  const both = document.getElementById('bothAnim').checked;
+  ctx.imageSmoothingEnabled = false;
+  if (viewMode === 'duel') {
+    view.width = 240; view.height = 160;
+    if (bgImg.complete) ctx.drawImage(bgImg, 0, 0); else { ctx.fillStyle = '#2a1d16'; ctx.fillRect(0, 0, 240, 160); }
+    const ofs = frames(other, both ? name : 'idle_mid');
+    const oframe = ofs[both ? Math.min(fi, ofs.length - 1) : Math.floor(performance.now() / 200) % ofs.length];
+    const place = (char, idx) => {
+      const isM = char === 'lieve', sx = isM ? 62 : 178;
+      drawSprite(idx, palRGBA(chars[char]), isM ? sx - R.RX : sx - (R.CW - R.RX), 152 - R.GY, !isM);
+    };
+    place(other, oframe);
+    place(cur, fs[fi]);
+  } else {
+    view.width = 192; view.height = 160;
+    ctx.drawImage(bgImg, 24, 0, 192, 160, 0, 0, 192, 160);
+    drawSprite(fs[fi], palRGBA(chars[cur]), 0, 0, false);
+    ctx.strokeStyle = 'rgba(242,194,92,.35)'; ctx.setLineDash([3, 3]); ctx.strokeRect(0.5, 0.5, 191, 159);
+  }
+  const slider = document.getElementById('frame');
+  slider.max = fs.length - 1; slider.value = fi;
+  document.getElementById('frameLbl').textContent = (fi + 1) + '/' + fs.length;
+}
+function tick(t) {
+  const name = currentAnimName(), fs = frames(cur, name);
+  const loop = ANIMS[animIndex(name)].loop;
+  const sp = SPEED[name.split('_')[0]] || 120;
+  if (playing && t - last > sp) {
+    last = t;
+    if (fi < fs.length - 1) fi++;
+    else if (loop) fi = 0;
+    else if (++hold > 900 / sp) { fi = 0; hold = 0; }
+  }
+  draw();
+  requestAnimationFrame(tick);
+}
+
+/* ---------------- clipping check (runs a moment after edits) */
+let clipTimer = null;
+function scheduleClip() {
+  clearTimeout(clipTimer);
+  clipTimer = setTimeout(() => {
+    const msgs = [];
+    for (const char of [...new Set(['lieve', cur])]) {
+      let n = 0;
+      for (const a of ANIMS) for (const f of frames(char, a.name)) {
+        let hit = false;
+        for (let y = 0; y < R.CH && !hit; y++) if (f[y * R.CW] || f[y * R.CW + R.CW - 1]) hit = true;
+        if (hit) n++;
+      }
+      if (n) msgs.push(`${NAMES[char]} goes past the side of the sprite area in ${n} frame${n > 1 ? 's' : ''}; those pixels will be cut off in the game. Try a shorter sword or a smaller height.`);
+    }
+    const w = document.getElementById('warn');
+    w.style.display = msgs.length ? 'block' : 'none';
+    w.textContent = msgs.join(' ');
+  }, 450);
+}
+
+/* ---------------- controls */
+const SLIDERS = [
+  ['scale', 'Height', 1.0, 1.5, 0.01], ['head_r', 'Head size', 5.6, 8.0, 0.1], ['torso', 'Torso length', 26, 34, 0.5],
+  ['uarm', 'Arm length', 13, 19, 0.5], ['thigh', 'Leg length', 20, 27, 0.5], ['build', 'Build', 0.6, 1.5, 0.01],
+  ['figure', 'Feminine figure', 0, 1, 0.05], ['chest', 'Chest', 0, 1, 0.05, 'lieve'], ['neck', 'Neck length', 2.6, 6.0, 0.1], ['upright', 'Upright posture', 0, 1, 0.05], ['chest_depth', 'Chest depth', 0.6, 1.1, 0.01], ['flare', 'Hakama flare', 0.7, 1.5, 0.05], ['blade', 'Weapon length', 12, 60, 1], ['staff_back', 'Staff behind the hands', 10, 32, 1, 'bo']];
+const COLOURS = [
+  ['Outline', [1]], ['Skin', [2, 3, 4]], ['Hair', [5, 6, 7]], ['Kimono top', [8, 9, 10]],
+  ['Hakama', [11, 12, 13]], ['Headband / blade edge', [14]], ['Blade', [15]]];
+const hex = p => '#' + p.map(v => v.toString(16).padStart(2, '0')).join('');
+const unhex = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
+
+function buildControls() {
+  const sl = document.getElementById('sliders'); sl.innerHTML = '';
+  for (const [key, label, mn, mx, st, only] of SLIDERS) {
+    const d = document.createElement('div'); d.className = 'slider';
+    if (only) d.dataset.only = only;
+    d.innerHTML = `<span>${label}</span><input type="range" min="${mn}" max="${mx}" step="${st}" data-key="${key}"><output></output>`;
+    sl.appendChild(d);
+  }
+  const co = document.getElementById('colours'); co.innerHTML = '';
+  for (const [label, ids] of COLOURS) {
+    const d = document.createElement('div'); d.className = 'colrow';
+    const tones = ids.length === 3 ? ['shadow', 'mid', 'light'] : [''];
+    d.innerHTML = `<span>${label}</span><div class="sw">${ids.map((id, k) =>
+      `<label title="${label} ${tones[k]}"><input type="color" data-pal="${id}"><small>${tones[k] ? tones[k][0].toUpperCase() : ''}</small></label>`).join('')}</div>` +
+      (ids.length === 3 ? `<button class="act" data-auto="${ids.join(',')}">Auto</button>` : '<span></span>');
+    co.appendChild(d);
+  }
+  document.querySelectorAll('[data-key]').forEach(inp => inp.addEventListener('input', () => {
+    chars[cur][inp.dataset.key] = parseFloat(inp.value); changed();
+  }));
+  document.querySelectorAll('[data-pal]').forEach(inp => inp.addEventListener('input', () => {
+    chars[cur].palette[+inp.dataset.pal] = unhex(inp.value); changed(false);
+  }));
+  document.querySelectorAll('[data-auto]').forEach(b => b.addEventListener('click', () => {
+    const ids = b.dataset.auto.split(',').map(Number);
+    const mid = chars[cur].palette[ids[1]];
+    chars[cur].palette[ids[0]] = shade(mid, 0.62, -0.025);
+    chars[cur].palette[ids[2]] = shade(mid, 1.28, 0.025);
+    changed(false);
+  }));
+}
+function shade(rgb, k, hueShift) {
+  // darker tones lean slightly cool, lighter tones slightly warm (classic pixel-art ramp)
+  let [r, g, b] = rgb.map(v => v / 255);
+  const mx = Math.max(r, g, b), mn = Math.min(r, g, b); let h = 0, s = 0, l = (mx + mn) / 2;
+  if (mx !== mn) { const d = mx - mn; s = l > .5 ? d / (2 - mx - mn) : d / (mx + mn);
+    h = mx === r ? (g - b) / d + (g < b ? 6 : 0) : mx === g ? (b - r) / d + 2 : (r - g) / d + 4; h /= 6; }
+  h = (h + hueShift + 1) % 1; l = Math.min(0.96, Math.max(0.04, l * k)); s = Math.min(1, s * (k > 1 ? 0.92 : 1.08));
+  const f = (n) => { const kk = (n + h * 12) % 12, a = s * Math.min(l, 1 - l); return l - a * Math.max(-1, Math.min(kk - 3, 9 - kk, 1)); };
+  return [f(0), f(8), f(4)].map(v => Math.round(v * 255));
+}
+
+function syncControls() {
+  const c = chars[cur];
+  document.querySelectorAll('[data-only]').forEach(r => r.style.display = (r.dataset.only === cur || r.dataset.only === (c.weapon || 'katana')) ? '' : 'none');
+  document.querySelectorAll('[data-flag]').forEach(b => b.checked = !!c[b.dataset.flag]);
+  document.querySelectorAll('[data-key]').forEach(inp => {
+    if (c[inp.dataset.key] === undefined) c[inp.dataset.key] = inp.dataset.key === 'chest_depth' ? 1 : inp.dataset.key === 'staff_back' ? 22 : 0;
+    inp.value = c[inp.dataset.key];
+    const st = +inp.step; inp.nextElementSibling.textContent = (+c[inp.dataset.key]).toFixed(st >= 1 ? 0 : st >= 0.1 ? 1 : 2);
+  });
+  document.querySelectorAll('[data-pal]').forEach(inp => {
+    const p = c.palette[+inp.dataset.pal].map(snap);
+    inp.value = hex(c.palette[+inp.dataset.pal]);
+    inp.parentElement.style.background = hex(p);
+  });
+  document.getElementById('hair').value = c.hair;
+  document.getElementById('headband').checked = !!c.headband;
+  const tl = document.getElementById('tail_len'); tl.value = c.tail_len; tl.nextElementSibling.textContent = (+c.tail_len).toFixed(1);
+  document.getElementById('tailRow').style.display = ['ponytail', 'long', 'flowing', 'highpony', 'braid', 'halfup', 'lowpony'].includes(c.hair) ? '' : 'none';
+  document.getElementById('bangs').checked = !!c.bangs;
+  document.getElementById('sidelocks').checked = !!c.sidelocks;
+  document.getElementById('eyes').checked = (c.eyes || 0) === 1;
+  document.getElementById('lips').checked = !!c.lips;
+  document.getElementById('vneck').checked = !!c.vneck;
+  document.getElementById('obi').value = String(c.obi || 0);
+  document.getElementById('weapon').value = c.weapon || 'katana';
+  document.getElementById('presetBox').style.display = cur === 'lieve' ? '' : 'none';
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('on', t.dataset.char === cur));
+  document.getElementById('out').value = exportText();
+}
+
+function exportText() {
+  const o = {};
+  for (const k of ALL) {
+    const s = toSpec(k);
+    o[k] = {};
+    for (const f of ['scale', 'torso', 'neck', 'head_r', 'uarm', 'farm', 'thigh', 'shin', 'blade', 'build', 'hair', 'headband', 'tail_len', 'flare', 'chest', 'figure', 'bangs', 'sidelocks', 'eyes', 'lips', 'obi', 'upright', 'chest_depth', 'vneck', 'weapon',
+                     'staff_back', 'ears', 'helm', 'menpo', 'hood', 'sode', 'lames', 'kusazuri', 'gauntlets', 'kesa', 'bare_arms',
+                     'torn', 'stripes', 'knitcap', 'hat', 'ruff', 'beard', 'pistol'])
+      if (s[f] !== undefined) o[k][f] = typeof s[f] === 'number' ? Math.round(s[f] * 100) / 100 : s[f];
+    o[k].palette = s.palette;
+  }
+  return 'KOMO CHARACTERS v1\n' + JSON.stringify(o);
+}
+
+function changed(geometry = true) {
+  if (geometry) invalidate(cur);
+  try { localStorage.setItem('komo-chars-draft', JSON.stringify(chars)); } catch (e) {}
+  syncControls();
+  if (geometry) scheduleClip();
+}
+
+document.getElementById('hair').addEventListener('change', e => { chars[cur].hair = e.target.value; changed(); });
+document.getElementById('headband').addEventListener('change', e => { chars[cur].headband = e.target.checked; changed(); });
+for (const id of ['bangs', 'sidelocks', 'lips', 'vneck']) document.getElementById(id).addEventListener('change', e => { chars[cur][id] = e.target.checked; changed(); });
+document.getElementById('eyes').addEventListener('change', e => { chars[cur].eyes = e.target.checked ? 1 : 0; changed(); });
+document.getElementById('obi').addEventListener('change', e => { chars[cur].obi = +e.target.value; changed(); });
+document.getElementById('weapon').addEventListener('change', e => { chars[cur].weapon = e.target.value; changed(); });
+document.querySelectorAll('[data-flag]').forEach(b => b.addEventListener('change', () => { chars[cur][b.dataset.flag] = b.checked; changed(); }));
+const PRESETS = /*PRESETS*/;
+const presetRow = document.getElementById('presets');
+[['IN THE ROM', null], ...PRESETS].forEach(([name, spec], k) => {
+  const b = document.createElement('button'); b.className = 'chip small';
+  b.textContent = k === 0 ? 'Current' : k + '. ' + name.split(' ').map(w => w[0] + w.slice(1).toLowerCase()).join(' ');
+  b.addEventListener('click', () => {
+    chars.lieve = spec ? Object.assign(clone(DEFAULTS.lieve), clone(spec)) : clone(DEFAULTS.lieve);
+    cur = 'lieve'; fi = 0; invalidate('lieve'); changed();
+    presetRow.querySelectorAll('.chip').forEach(c => c.classList.toggle('on', c === b));
+  });
+  presetRow.appendChild(b);
+});
+document.getElementById('tail_len').addEventListener('input', e => { chars[cur].tail_len = parseFloat(e.target.value); changed(); });
+document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => { cur = t.dataset.char; if (cur !== 'lieve') opp = cur; fi = 0; syncControls(); scheduleClip(); }));
+document.getElementById('resetChar').addEventListener('click', () => { chars[cur] = clone(DEFAULTS[cur]); changed(); });
+document.getElementById('resetAll').addEventListener('click', () => { chars = clone(DEFAULTS); ALL.forEach(invalidate); changed(); });
+document.getElementById('mirror').addEventListener('click', () => {
+  const o = cur === 'lieve' ? opp : 'lieve';
+  for (const k of ['scale', 'head_r', 'torso', 'uarm', 'thigh', 'build', 'flare', 'blade', 'hair', 'headband', 'tail_len']) chars[o][k] = chars[cur][k];
+  invalidate(o); changed();
+});
+document.getElementById('copy').addEventListener('click', async () => {
+  const st = document.getElementById('copyStatus');
+  try { await navigator.clipboard.writeText(exportText()); st.textContent = 'Copied. Paste it into the chat.'; }
+  catch (e) { const t = document.getElementById('out'); t.focus(); t.select(); st.textContent = 'Copying is blocked here: the text below is selected, copy it by hand.'; }
+});
+document.getElementById('load').addEventListener('click', () => {
+  const st = document.getElementById('loadStatus');
+  try {
+    const txt = document.getElementById('in').value.replace(/^KOMO CHARACTERS v1\s*/, '');
+    const d = JSON.parse(txt);
+    let n = 0;
+    for (const k of ALL) {
+      if (!d[k]) continue;
+      if (!Array.isArray(d[k].palette) || d[k].palette.length !== 16) throw new Error('bad ' + k);
+      chars[k] = Object.assign(clone(DEFAULTS[k]), d[k]); n++;
+    }
+    if (!n) throw new Error('empty');
+    ALL.forEach(invalidate); changed(); st.textContent = 'Loaded.';
+  } catch (e) { st.textContent = "That doesn't look like Kōmō settings."; }
+});
+
+/* animation chips */
+const chipRow = document.getElementById('animChips');
+for (const [label, g, st] of GROUPS) {
+  const b = document.createElement('button'); b.className = 'chip' + (g === group ? ' on' : ''); b.textContent = label;
+  b.addEventListener('click', () => { group = g; fi = 0; hold = 0;
+    chipRow.querySelectorAll('.chip').forEach(c => c.classList.toggle('on', c === b));
+    document.getElementById('stanceRow').style.visibility = st ? 'visible' : 'hidden'; });
+  chipRow.appendChild(b);
+}
+const stRow = document.getElementById('stanceRow');
+for (const s of ['low', 'mid', 'high']) {
+  const b = document.createElement('button'); b.className = 'chip small' + (s === stance ? ' on' : ''); b.textContent = s[0].toUpperCase() + s.slice(1);
+  b.addEventListener('click', () => { stance = s; fi = 0; stRow.querySelectorAll('.chip').forEach(c => c.classList.toggle('on', c === b)); });
+  stRow.appendChild(b);
+}
+document.querySelectorAll('[data-view]').forEach(b => b.addEventListener('click', () => {
+  viewMode = b.dataset.view; document.querySelectorAll('[data-view]').forEach(c => c.classList.toggle('on', c === b));
+}));
+document.getElementById('play').addEventListener('click', e => { playing = !playing; e.target.textContent = playing ? 'Pause' : 'Play'; });
+document.getElementById('frame').addEventListener('input', e => { fi = +e.target.value; playing = false; document.getElementById('play').textContent = 'Play'; });
+
+buildControls();
+syncControls();
+scheduleClip();
+requestAnimationFrame(tick);
+</script>
+</body>
+</html>
