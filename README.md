@@ -3,9 +3,9 @@
 <h1 align="center">Kōmō 紅毛</h1>
 
 <p align="center"><b>A Game Boy Advance duelling game. Nagasaki, 1651. One pagoda, five floors, five masters.</b><br>
-<a href="https://bezoon5.github.io/Komo---GBA-Game/"><b>▶ Play it in your browser</b></a> ·
+<a href="https://bezoon5.github.io/Komo---GBA-Game/play/"><b>▶ Play it in your browser</b></a> ·
 <a href="https://github.com/Bezoon5/Komo---GBA-Game/raw/main/play/komo.gba">Download the ROM</a> ·
-<a href="https://bezoon5.github.io/Komo---GBA-Game/designer.html">Character designer</a></p>
+<a href="https://bezoon5.github.io/Komo---GBA-Game/play/designer.html">Character designer</a></p>
 
 ---
 
@@ -47,7 +47,7 @@ A tutorial on the pier (on Rookie difficulty) teaches the basics.
 
 ### Where to play
 
-- **In your browser:** the [web player](https://bezoon5.github.io/Komo---GBA-Game/) runs the game with [EmulatorJS](https://emulatorjs.org/) and the mGBA core. Saves stay in your browser. Keys can be changed from the gamepad icon in the player; controllers and touch screens work.
+- **In your browser:** the [web player](https://bezoon5.github.io/Komo---GBA-Game/play/) runs the game with [EmulatorJS](https://emulatorjs.org/) and the mGBA core. Saves stay in your browser. Keys can be changed from the gamepad icon in the player; controllers and touch screens work.
 - **Analogue Pocket:** copy `komo.gba` to the folder your GBA core reads ROMs from and follow that core's setup (most GBA cores also need the official GBA BIOS, which isn't included here).
 - **Emulators:** any accurate GBA emulator, for example [mGBA](https://mgba.io/) on desktop or Delta on iPhone.
 
