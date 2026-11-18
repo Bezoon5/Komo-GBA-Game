@@ -1,5 +1,8 @@
 # Changelog
 
+## v5.5.2
+- Lieve's father is now Sybrand Oosterling, and Lieve's surname is Oosterling, in the story, the cutscenes, both endings and the credits.
+
 ## v5.5.1
 - Fixed speckled garbage around the fighters in accurate emulators (mGBA, including the web player) and on hardware: sprite tiles are now cleared from a zero kept in RAM, because a DMA reading the cartridge can't hold its source address fixed.
 

@@ -2698,8 +2698,8 @@ static void load_progress(void) {
 
 /* ------------------------------------------------------------------ scenes */
 static const char *const story[4][6] = {
-    {"NAGASAKI, 1651.", "", "PIETER DE VRIES WAS THE", "FINEST TRADER THE DUTCH", "COMPANY EVER SENT EAST.", ""},
-    {"ON THE NIGHT OF THE STORM,", "A GIANT IN BLACK ARMOUR", "CAME ABOARD HIS SHIP.", "", "BY MORNING, PIETER", "WAS DEAD."},
+    {"NAGASAKI, 1651.", "", "SYBRAND OOSTERLING WAS THE", "FINEST TRADER THE DUTCH", "COMPANY EVER SENT EAST.", ""},
+    {"ON THE NIGHT OF THE STORM,", "A GIANT IN BLACK ARMOUR", "CAME ABOARD HIS SHIP.", "", "BY MORNING, SYBRAND", "WAS DEAD."},
     {"NO DUTCH WOMAN WAS ALLOWED", "ASHORE. HIS DAUGHTER", "LIEVE CAME ANYWAY.", "", "SHE HAD NEVER HELD", "A SWORD."},
     {"THE GIANT WAITS AT THE TOP", "OF THE PAGODA OF FIVE", "FLOORS. EACH FLOOR HAS", "ITS MASTER.", "", "SHE BEGINS AT THE FIRST."},
 };
@@ -3048,8 +3048,8 @@ static const Cmd cut_pre4[] = {STAGE(3), ACTORS(4, 60), POSE(1, A_IDLE_MID, 0), 
     SAY("KAGERO", "A MAN WITH RED HAIR.|LIKE YOURS."), INK, END};
 static const Cmd cut_pre5[] = {STAGE(4), ACTORS(5, 50), POSE(1, A_IDLE_HIGH, 0), FADEIN, {C_LIGHT, 0, 0, 0, 0, 0, 0},
     SAY("KUROGANE:A", "THE MERCHANT'S DAUGHTER."),
-    SAY("KUROGANE:A", "MORSEL PAID ME FOR ONE|DE VRIES. HE WILL NOT MIND|IF I KILL TWO."),
-    SAY("LIEVE:A", "FOR PIETER DE VRIES."), {C_LIGHT, 0, 0, 0, 0, 0, 0}, INK, END};
+    SAY("KUROGANE:A", "MORSEL PAID ME FOR ONE|OOSTERLING. HE WILL NOT|MIND IF I KILL TWO."),
+    SAY("LIEVE:A", "FOR SYBRAND OOSTERLING."), {C_LIGHT, 0, 0, 0, 0, 0, 0}, INK, END};
 static const Cmd cut_post1[] = {KEEP, DIM(4),
     NARR("KENJI WAS THE GATEKEEPER.|HE TURNED BACK THE UNWORTHY|WITHOUT KILLING THEM."),
     NARR("SHE WAS NOT TURNED BACK."),
@@ -3061,7 +3061,7 @@ static const Cmd cut_post2[] = {KEEP, DIM(4),
 static const Cmd cut_post3[] = {KEEP, DIM(4),
     NARR("THE LANTERNS GUTTER OUT."),
     NARR("SILVER WAS LEAVING JAPAN,|AGAINST THE SHOGUN'S LAW."),
-    NARR("PIETER MEANT TO REPORT IT.|SOMEONE STOPPED HIM."), INK, END};
+    NARR("SYBRAND MEANT TO REPORT|IT. SOMEONE STOPPED HIM."), INK, END};
 static const Cmd cut_post4[] = {KEEP, DIM(4),
     NARR("A PURSE OF DUTCH SILVER|LIES ON THE WET BOARDS."),
     NARR("IT BEARS THE SEAL OF|ADRIAAN MORSEL."),
@@ -3074,10 +3074,10 @@ static const Cmd cut_post5[] = {KEEP, DIM(4), {C_LIGHT, 0, 0, 0, 0, 0, 0},
     NARR("THE MAGISTRATE'S MEN ARE|ALREADY WAITING FOR HIM."), FADEOUT, END};
 static const Cmd cut_prologue[] = {STILL(0), FADEIN,
     NARR("NAGASAKI, 1651. THE NIGHT|OF THE STORM."),
-    NARR("PIETER DE VRIES, THE FINEST|DUTCH TRADER, RODE IT OUT|IN THE HARBOUR."), INK,
+    NARR("SYBRAND OOSTERLING, THE|FINEST DUTCH TRADER, RODE|IT OUT IN THE HARBOUR."), INK,
     STAGE(4), {C_GREY, 1, 0, 0, 0, 0, 0}, {C_HIDE, 0, 0, 0, 0, 0, 0},
     {C_ACTOR, 1, 5, 30, -1, 0, 0}, POSE(1, A_IDLE_HIGH, 0), FADEIN, {C_LIGHT, 0, 0, 0, 0, 0, 0},
-    NARR("THAT NIGHT A GIANT IN BLACK|ARMOUR CAME ABOARD, AND|PIETER DE VRIES DIED."),
+    NARR("THAT NIGHT A GIANT IN BLACK|ARMOUR CAME ABOARD, AND|SYBRAND OOSTERLING DIED."),
     {C_LIGHT, 0, 0, 0, 0, 0, 0},
     NARR("NOW HE WAITS ON THE ROOF OF|THE PAGODA OF FIVE FLOORS."),
     FADEOUT, {C_GREY, 0, 0, 0, 0, 0, 0}, END};
@@ -3085,13 +3085,13 @@ static const Cmd cut_dock_pre[] = {STAGE(6), ACTORS(6, 60), POSE(1, A_IDLE_MID, 
     NARR("DEJIMA, THE NIGHT BEFORE|THE CLIMB."),
     SAY("SAILOR:A", "OI! A GIRL ON THE COMPANY'S|PIER? AND WITH A JAPANESE|SWORD!"),
     SAY("LIEVE", "LET ME PASS. I HAVE BUSINESS|AT THE PAGODA."),
-    SAY("SAILOR", "MORSEL PAYS A GUILDER TO|STOP THE DE VRIES GIRL.|HIC. THAT'S YOU."), INK, END};
+    SAY("SAILOR", "MORSEL PAYS A GUILDER TO|STOP THE OOSTERLING GIRL.|HIC. THAT'S YOU."), INK, END};
 static const Cmd cut_dock_post[] = {KEEP, DIM(4),
     NARR("THE SAILOR WILL NOT TROUBLE|HER AGAIN."),
     NARR("SO MORSEL KNOWS SHE IS|HERE. THERE IS NO TURNING|BACK NOW."),
     NARR("ABOVE THE ROOFTOPS, THE|PAGODA WAITS IN THE RAIN."), INK, END};
 static const Cmd cut_spire_pre[] = {STAGE(7), ACTORS(7, 60), POSE(1, A_IDLE_MID, 0), FADEIN,
-    SAY("MORSEL", "YOU CLIMBED IT ALL. PIETER|WOULD HAVE BEEN PROUD. HE|WAS ALWAYS SENTIMENTAL."),
+    SAY("MORSEL", "YOU CLIMBED IT ALL. YOUR|FATHER WOULD BE PROUD. HE|WAS ALWAYS SENTIMENTAL."),
     SAY("LIEVE:A", "YOU SOLD THE SHOGUN'S SILVER|AND HAD MY FATHER KILLED|TO HIDE IT."),
     SAY("MORSEL:A", "I KEPT THE COMPANY'S BOOKS|IN ORDER. COME, THEN. THE|SUN IS UP. LET US FINISH IT."), INK, END};
 static const Cmd cut_spire_post[] = {KEEP, DIM(4),
@@ -3115,7 +3115,7 @@ static const Cmd cut_spared2[] = {KEEP, DIM(4),
     SAY("HOZEN:R", "TEN CHESTS OF SILVER, NO|SHOGUN'S SEAL. YOUR FATHER|WOULD NOT SIGN FOR THEM."), INK, END};
 static const Cmd cut_spared3[] = {KEEP, DIM(4),
     NARR("GONZO SITS DOWN HEAVILY|AMONG THE GUTTERED LAMPS."),
-    SAY("GONZO:H", "THE SILVER WAS LEAVING|JAPAN. PIETER MEANT TO TELL|THE MAGISTRATE."),
+    SAY("GONZO:H", "THE SILVER WAS LEAVING|JAPAN. SYBRAND MEANT TO|TELL THE MAGISTRATE."),
     SAY("GONZO:R", "THEY MADE SURE HE NEVER|DID."), INK, END};
 static const Cmd cut_spared4[] = {KEEP, DIM(4),
     NARR("KAGERO PRESSES A PURSE OF|DUTCH SILVER INTO HER HAND."),
@@ -3167,7 +3167,7 @@ static const Cmd cut_dark_end[] = {KEEP, DIM(4), {C_LIGHT, 0, 0, 0, 0, 0, 0},
     NARR("SHE LIFTS THE BLACK HELMET|FROM THE ROOF, AND PUTS|IT ON."), INK,
     STILL(0), FADEIN,
     NARR("MORSEL'S MEN FIND A FIGURE|IN BLACK ARMOUR ON THE|ROOF. THEY DO NOT CLIMB."),
-    NARR("NAGASAKI HAS A NEW|DEMON. NO ONE REMEMBERS|PIETER DE VRIES."), FADEOUT, END};
+    NARR("NAGASAKI HAS A NEW|DEMON. NO ONE REMEMBERS|SYBRAND OOSTERLING."), FADEOUT, END};
 static const Cmd *const cuts[NCUTS] = {cut_pre1, cut_pre2, cut_pre3, cut_pre4, cut_pre5,
                                     cut_post1, cut_post2, cut_post3, cut_post4, cut_post5, cut_prologue,
                                     cut_dock_pre, cut_dock_post, cut_spire_pre, cut_spire_post, cut_spire_spared,
@@ -3871,7 +3871,7 @@ static void credits_page(int p) {
     case 2:
         reset_fighter(&fp, &art_lieve, -40, 1, 0); show_fp = 1;
         fp.st = ST_POSE; fp.pose_anim = A_TURN; fp.pose_fr = 2; set_frame(&fp, A_TURN, 2);
-        text_put(15, 8, "LIEVE DE VRIES", T_GOLD); text_put(15, 10, "THE MERCHANT'S", T_WHITE); text_put(15, 11, "DAUGHTER", T_WHITE);
+        text_put(14, 8, "LIEVE OOSTERLING", T_GOLD); text_put(14, 10, "THE MERCHANT'S", T_WHITE); text_put(14, 11, "DAUGHTER", T_WHITE);
         break;
     case 3: case 4: case 5: case 6: case 7: {
         const Opp *o = &OPPS[p - 3];
@@ -3947,7 +3947,7 @@ static void scene_result(void) {
         text_clear();
         if (ending_done) {
             text_center(2, "KOMO", T_GOLD);
-            text_center(4, "LIEVE DE VRIES CLIMBED", T_WHITE);
+            text_center(4, "LIEVE OOSTERLING CLIMBED", T_WHITE);
             text_center(5, "THE PAGODA OF FIVE FLOORS.", T_WHITE);
         } else {
             static char f[] = "FLOOR 1 CLEARED";

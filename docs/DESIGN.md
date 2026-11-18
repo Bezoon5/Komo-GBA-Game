@@ -6,7 +6,7 @@
 
 ## 1. Pitch
 
-Nagasaki, 1651. A giant in black armour killed Pieter de Vries, the finest trader the Dutch company ever sent east. His daughter **Lieve**, red-haired and forbidden to set foot in Japan, follows the killer up a five-storey pagoda in which each floor is held by a master of a different fighting style. She starts as a rookie who has never held a sword. It's a story of revenge.
+Nagasaki, 1651. A giant in black armour killed Sybrand Oosterling, the finest trader the Dutch company ever sent east. His daughter **Lieve**, red-haired and forbidden to set foot in Japan, follows the killer up a five-storey pagoda in which each floor is held by a master of a different fighting style. She starts as a rookie who has never held a sword. It's a story of revenge.
 
 ## 2. The campaign
 

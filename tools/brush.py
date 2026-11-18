@@ -109,7 +109,7 @@ def _outline(img, m, col=1):
 
 
 def still_storm():
-    """Pieter's ship in the storm: a great curling wave in the woodblock manner."""
+    """Sybrand's ship in the storm: a great curling wave in the woodblock manner."""
     H, W = 160, 240
     ys, xs = np.mgrid[0:H, 0:W]
     img = np.full((H, W), 2, int)

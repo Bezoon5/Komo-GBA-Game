@@ -9,7 +9,7 @@
 
 ---
 
-**Kōmō** ("red hair") was the Edo-period Japanese word for the Dutch traders of Nagasaki. A giant in black armour has killed Pieter de Vries, the finest trader the Dutch company ever sent east. His daughter **Lieve**, red-haired and forbidden to set foot in Japan, follows the killer up a five-storey pagoda. Each floor is held by a master of a different fighting style.
+**Kōmō** ("red hair") was the Edo-period Japanese word for the Dutch traders of Nagasaki. A giant in black armour has killed Sybrand Oosterling, the finest trader the Dutch company ever sent east. His daughter **Lieve**, red-haired and forbidden to set foot in Japan, follows the killer up a five-storey pagoda. Each floor is held by a master of a different fighting style.
 
 It is a sword-duelling game in the spirit of Bushido Blade and the tower of a classic martial-arts film: big, hand-animated fighters, cuts at three heights, timed parries, seven planes of depth, and a story that changes with how honourably you fight.
 
